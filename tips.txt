@@ -1,0 +1,17 @@
+1. AS 自带的 gradle ->替换成gradle-2.8
+2. 移除AS 生成的APP的v4包，以为EaseUI lib里有v4包
+
+在app的build.gradle里
+compile ('com.android.support:appcompat-v7:23.2.1') {
+        exclude module: 'support-v4'
+    }
+
+3. copy permission to manifest.xml
+
+4. don't forget to set appkey
+
+5. don't forget to add easemob service
+
+6. Radio button 一定确认设置了checked为true
+
+
