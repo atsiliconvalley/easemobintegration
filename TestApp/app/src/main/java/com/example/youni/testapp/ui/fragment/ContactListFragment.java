@@ -38,6 +38,7 @@ public class ContactListFragment extends EaseContactListFragment {
     ImageView notifImageView;
     private String hxId;
     private LinearLayout groupsItem;
+    private LinearLayout invitationItem;
 
     @Override
     public void setUpView(){
@@ -45,7 +46,9 @@ public class ContactListFragment extends EaseContactListFragment {
         View headerView = LayoutInflater.from(getContext()).inflate(R.layout.activity_contact_header,null);
         notifImageView = (ImageView) headerView.findViewById(R.id.iv_invitation_notif);
 
-        notifImageView.setOnClickListener(new View.OnClickListener() {
+
+        invitationItem = (LinearLayout) headerView.findViewById(R.id.ll_contact_invitation);
+        invitationItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 notifImageView.setVisibility(View.INVISIBLE);

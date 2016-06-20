@@ -10,9 +10,11 @@ import com.example.youni.testapp.model.db.PreferenceUtils;
 import com.example.youni.testapp.ui.MainActivity;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.EMContactListener;
+import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMOptions;
+import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.easeui.controller.EaseUI;
 import com.hyphenate.easeui.domain.EaseUser;
 import com.hyphenate.easeui.model.EaseNotifier;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by youni on 2016/5/19.
@@ -40,6 +43,7 @@ public class Model {
     private PreferenceUtils mPreference;
     private boolean mIsContactSynced = false;
     private List<EMContactListener> mContactListeners;
+    private List<EMGroupChangeListener> groupChangeListeners;
 
     // used to show the toast
     private Handler mH = new Handler();
@@ -369,7 +373,7 @@ public class Model {
             public EaseUser getUser(String username) {
                 DemoUser user = mContacts.get(username);
 
-                if(user != null){
+                if (user != null) {
                     EaseUser easeUser = new EaseUser(username);
 
                     easeUser.setNick(user.getNick());
@@ -381,6 +385,9 @@ public class Model {
                 return null;
             }
         });
+
+        EMClient.getInstance().groupManager().addGroupChangeListener(groupChangeListener);
+
     }
 
     public void addContactListeners(EMContactListener listener){
@@ -393,6 +400,22 @@ public class Model {
 
     public void removeContactListener(EMContactListener listener){
         mContactListeners.remove(listener);
+    }
+
+    public void addGroupChangeListener(EMGroupChangeListener groupChangeListener){
+        if(groupChangeListeners.contains(groupChangeListener)){
+            return;
+        }
+
+        groupChangeListeners.add(groupChangeListener);
+    }
+
+    public void removeGroupChangeListener(EMGroupChangeListener groupChangeListener){
+        if(groupChangeListener == null){
+            return;
+        }
+
+        groupChangeListeners.remove(groupChangeListener);
     }
 
     /**
@@ -414,7 +437,7 @@ public class Model {
     }
 
     public List<InvitationInfo> getInvitationInfo(){
-        return mDBManager.getContactInvitations();
+        return mDBManager.getInvitations();
     }
 
     public void removeInvitation(String user) {
@@ -432,4 +455,192 @@ public class Model {
     public boolean hasInviteNotif(){
         return mDBManager.hasInviteNotif();
     }
+
+//    void 	onInvitationReceived (String groupId, String groupName, String inviter, String reason)
+//
+//    void 	onApplicationReceived (String groupId, String groupName, String applicant, String reason)
+//
+//    void 	onApplicationAccept (String groupId, String groupName, String accepter)
+//
+//    void 	onApplicationDeclined (String groupId, String groupName, String decliner, String reason)
+//
+//    void 	onInvitationAccpted (String groupId, String invitee, String reason)
+//
+//    void 	onInvitationDeclined (String groupId, String invitee, String reason)
+//
+//    void 	onUserRemoved (String groupId, String groupName)
+//
+//    void 	onGroupDestroy (String groupId, String groupName)
+//
+//    void 	onAutoAcceptInvitationFromGroup (String groupId, String inviter, String inviteMessage)
+
+    private EMGroupChangeListener groupChangeListener = new EMGroupChangeListener() {
+        @Override
+        public void onInvitationReceived(String s, String s1, String s2, String s3) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s1);
+            groupInfo.setInviteTriggerUser(s2);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setReason(s3);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_INVITE);
+            invitationInfo.setGroupInfo(groupInfo);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext,"收到邀请 : " + groupInfo,Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+
+        @Override
+        public void onApplicationReceived(String s, String s1, String s2, String s3) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s1);
+            groupInfo.setInviteTriggerUser(s2);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setReason(s3);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_APPLICATION);
+            invitationInfo.setGroupInfo(groupInfo);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "收到申请 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+
+        @Override
+        public void onApplicationAccept(String s, String s1, String s2) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s1);
+            groupInfo.setInviteTriggerUser(s2);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setGroupInfo(groupInfo);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPT);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "申请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            String stringInviteAccept = " 接收了你的邀请";
+
+            // 加群申请被同意
+            EMMessage msg = EMMessage.createReceiveMessage(EMMessage.Type.TXT);
+            msg.setChatType(EMMessage.ChatType.GroupChat);
+            msg.setFrom(groupInfo.getInviteTriggerUser());
+            msg.setTo(groupInfo.getGroupId());
+            msg.setMsgId(UUID.randomUUID().toString());
+            msg.addBody(new EMTextMessageBody(groupInfo.getInviteTriggerUser() + " " + stringInviteAccept));
+            msg.setStatus(EMMessage.Status.SUCCESS);
+
+            // 保存同意消息
+            EMClient.getInstance().chatManager().saveMessage(msg);
+        }
+
+        @Override
+        public void onApplicationDeclined(String s, String s1, String s2, String s3) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s1);
+            groupInfo.setInviteTriggerUser(s2);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setReason(s3);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_DECLINED);
+            invitationInfo.setGroupInfo(groupInfo);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "申请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onInvitationAccpted(String s, String s1, String s2) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s);
+            groupInfo.setInviteTriggerUser(s1);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setGroupInfo(groupInfo);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "邀请被接收 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onInvitationDeclined(String s, String s1, String s2) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s);
+            groupInfo.setInviteTriggerUser(s1);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setGroupInfo(groupInfo);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_DECLINED);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "邀请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onUserRemoved(String s, String s1) {
+
+        }
+
+        @Override
+        public void onGroupDestroy(String s, String s1) {
+
+        }
+
+        @Override
+        public void onAutoAcceptInvitationFromGroup(String s, String s1, String s2) {
+            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            groupInfo.setGroupId(s);
+            groupInfo.setGroupName(s);
+            groupInfo.setInviteTriggerUser(s1);
+
+            InvitationInfo invitationInfo = new InvitationInfo();
+
+            invitationInfo.setGroupInfo(groupInfo);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
+
+            mH.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mAppContext, "邀请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    };
 }

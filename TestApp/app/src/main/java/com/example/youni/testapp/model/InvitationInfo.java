@@ -1,12 +1,12 @@
 package com.example.youni.testapp.model;
 
-import com.google.android.gms.games.multiplayer.Invitation;
-
 /**
  * Created by youni on 2016/5/25.
  */
 public class InvitationInfo {
     private DemoUser user;
+    private IMInvitationGroupInfo groupInfo;
+
     private String reason;
 
     private InvitationStatus status;
@@ -42,9 +42,28 @@ public class InvitationInfo {
         this.status = status;
     }
 
+    public void setGroupInfo(IMInvitationGroupInfo groupInfo){
+        this.groupInfo = groupInfo;
+    }
+
+    public IMInvitationGroupInfo getGroupInfo(){
+        return groupInfo;
+    }
+
     public enum InvitationStatus{
+        // contact invite status
         NEW_INVITE,
         INVITE_ACCEPT,
-        INVITE_ACCEPT_BY_PEER
+        INVITE_ACCEPT_BY_PEER,
+
+        //group invite status
+        NEW_GROUP_INVITE,
+        NEW_GROUP_APPLICATION,
+
+        GROUP_INVITE_ACCEPTED,
+        GROUP_APPLICATION_ACCEPT,
+
+        GROUP_INVITE_DECLINED,
+        GROUP_APPLICATION_DECLINED
     }
 }

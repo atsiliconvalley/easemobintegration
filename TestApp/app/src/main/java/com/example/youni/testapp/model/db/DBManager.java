@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.youni.testapp.model.DemoUser;
+import com.example.youni.testapp.model.IMInvitationGroupInfo;
 import com.example.youni.testapp.model.InvitationInfo;
 import com.example.youni.testapp.model.InvitationInfo.InvitationStatus;
 
@@ -98,7 +99,7 @@ public class DBManager {
         db.delete(UserTable.TABLE_NAME, UserTable.COL_HXID + " = ? ", new String[]{user.getHxId()});
     }
 
-    public List<InvitationInfo> getContactInvitations(){
+    public List<InvitationInfo> getInvitations(){
 
         List<InvitationInfo> inviteInfos = new ArrayList<>();
 
@@ -107,12 +108,29 @@ public class DBManager {
         Cursor cursor = db.rawQuery("select * from " + InvitationMessageTable.TABLE_NAME,null);
 
         while(cursor.moveToNext()){
-            DemoUser user = new DemoUser();
-            user.setHxId(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_HXID)));
-            user.setNick(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_USERNAME)));
+            String groupId = cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_GROUP_ID));
+
+            boolean isGroupInvite = (groupId != null);
 
             InvitationInfo info = new InvitationInfo();
-            info.setUser(user);
+            String name = cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_USERNAME));
+
+            if(!isGroupInvite){
+                DemoUser user = new DemoUser();
+                user.setHxId(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_HXID)));
+                user.setNick(name);
+
+
+                info.setUser(user);
+            }else{
+                IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+
+                groupInfo.setGroupId(groupId);
+                groupInfo.setGroupName(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_GROUP_NAME)));
+                groupInfo.setInviteTriggerUser(name);
+
+            }
+
 
             info.setStatus(int2InviteStatus(cursor.getInt(cursor.getColumnIndex(InvitationMessageTable.COL_INVITE_STATUS))));
             info.setReason(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_REASON)));
@@ -132,17 +150,54 @@ public class DBManager {
             return InvitationStatus.INVITE_ACCEPT;
         }
 
-        return InvitationStatus.INVITE_ACCEPT_BY_PEER;
+        if(intStatus == InvitationStatus.INVITE_ACCEPT_BY_PEER.ordinal()){
+            return InvitationStatus.INVITE_ACCEPT_BY_PEER;
+        }
+
+        if(intStatus == InvitationStatus.NEW_GROUP_INVITE.ordinal()){
+            return InvitationStatus.NEW_GROUP_INVITE;
+        }
+
+        if(intStatus == InvitationStatus.NEW_GROUP_APPLICATION.ordinal()){
+            return InvitationStatus.NEW_GROUP_APPLICATION;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_INVITE_ACCEPTED.ordinal()){
+            return InvitationStatus.GROUP_INVITE_ACCEPTED;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_APPLICATION_ACCEPT.ordinal()){
+            return InvitationStatus.GROUP_APPLICATION_ACCEPT;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_INVITE_DECLINED.ordinal()){
+            return InvitationStatus.GROUP_INVITE_DECLINED;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_APPLICATION_DECLINED.ordinal()){
+            return InvitationStatus.GROUP_APPLICATION_DECLINED;
+        }
+
+        return null;
     }
 
     public void addInvitation(InvitationInfo invitationInfo){
         SQLiteDatabase db = mHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(InvitationMessageTable.COL_HXID,invitationInfo.getUser().getHxId());
+
         values.put(InvitationMessageTable.COL_INVITE_STATUS,invitationInfo.getStatus().ordinal());
         values.put(InvitationMessageTable.COL_REASON,invitationInfo.getReason());
-        values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getUser().getNick());
+
+        if(invitationInfo.getUser() != null){
+            values.put(InvitationMessageTable.COL_HXID,invitationInfo.getUser().getHxId());
+            values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getUser().getNick());
+        }else{
+            values.put(InvitationMessageTable.COL_HXID,invitationInfo.getGroupInfo().getGroupId());
+            values.put(InvitationMessageTable.COL_GROUP_ID,invitationInfo.getGroupInfo().getGroupId());
+            values.put(InvitationMessageTable.COL_GROUP_NAME,invitationInfo.getGroupInfo().getGroupName());
+            values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getGroupInfo().getInviteTriggerUser());
+        }
 
         db.replace(InvitationMessageTable.TABLE_NAME, null, values);
     }
@@ -255,6 +310,9 @@ class InvitationMessageTable {
     static final String TABLE_NAME = "invitation_message";
     static final String COL_HXID = "_hx_id";
     static final String COL_USERNAME = "_username";
+    static final String COL_GROUP_NAME = "_group_name";
+    static final String COL_GROUP_ID = "_group_id";
+    static final String COL_GROUP_INVITE_TRIGGER_USER = "_invite_trigger_user";
     static final String COL_REASON ="_reason";
     static final String COL_INVITE_STATUS ="_invite_status";
 
@@ -263,6 +321,8 @@ class InvitationMessageTable {
                                             + COL_INVITE_STATUS + " INTEGER , "
                                             + COL_REASON + " TEXT, "
                                             + COL_USERNAME + " TEXT, "
+                                            + COL_GROUP_NAME + " TEXT, "
+                                            + COL_GROUP_ID + " TEXT, "
                                             + COL_HXID + " TEXT PRIMARY KEY);";
 }
 
