@@ -8,7 +8,7 @@ public class DemoUser {
 
      * nick 名称
      */
-    private String userName;
+    private String nick;
 
     /**
      * 对应的环信ID
@@ -32,21 +32,22 @@ public class DemoUser {
 
     public DemoUser(String hxId){
         this.hxId = hxId;
+
     }
 
     public DemoUser(){
     }
 
-    public String getUserName() {
-        if(userName == null){
+    public String getNick() {
+        if(nick == null){
             return hxId;
         }
 
-        return userName;
+        return nick;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setNick(String nick) {
+        this.nick = nick;
     }
 
     public String getHxId() {

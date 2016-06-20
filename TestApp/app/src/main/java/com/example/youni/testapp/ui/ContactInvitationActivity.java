@@ -20,8 +20,6 @@ import com.hyphenate.EMContactListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.exceptions.HyphenateException;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -233,17 +231,17 @@ class MyAdapter extends BaseAdapter{
                 holder.reason.setText("加个好友吧!");
             }
         }else if(inviteInfo.getStatus() == InvitationInfo.InvitationStatus.INVITE_ACCEPT){
-            holder.reason.setText("your added new friend " + user.getUserName());
+            holder.reason.setText("your added new friend " + user.getNick());
 
             holder.btnAccept.setVisibility(View.GONE);
             holder.btnReject.setVisibility(View.GONE);
         }else{
-            holder.reason.setText(user.getUserName() + " accepted your invitation");
+            holder.reason.setText(user.getNick() + " accepted your invitation");
             holder.btnAccept.setVisibility(View.GONE);
             holder.btnReject.setVisibility(View.GONE);
         }
 
-        holder.name.setText(user.getUserName());
+        holder.name.setText(user.getNick());
 
         return convertView;
     }

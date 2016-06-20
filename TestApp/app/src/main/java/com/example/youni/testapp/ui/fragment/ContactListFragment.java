@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.youni.testapp.R;
@@ -17,6 +18,7 @@ import com.example.youni.testapp.model.Model;
 import com.example.youni.testapp.ui.AddFriendActivity;
 import com.example.youni.testapp.ui.ChatActivity;
 import com.example.youni.testapp.ui.ContactInvitationActivity;
+import com.example.youni.testapp.ui.GroupListActivity;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;
@@ -35,6 +37,7 @@ public class ContactListFragment extends EaseContactListFragment {
     private Model.OnSyncListener mContactSyncListener;
     ImageView notifImageView;
     private String hxId;
+    private LinearLayout groupsItem;
 
     @Override
     public void setUpView(){
@@ -42,11 +45,7 @@ public class ContactListFragment extends EaseContactListFragment {
         View headerView = LayoutInflater.from(getContext()).inflate(R.layout.activity_contact_header,null);
         notifImageView = (ImageView) headerView.findViewById(R.id.iv_invitation_notif);
 
-        notifImageView.setVisibility(Model.getInstance().hasInviteNotif() ? View.VISIBLE : View.INVISIBLE);
-
-        listView.addHeaderView(headerView);
-        registerForContextMenu(listView);
-        headerView.setOnClickListener(new View.OnClickListener() {
+        notifImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 notifImageView.setVisibility(View.INVISIBLE);
@@ -54,6 +53,19 @@ public class ContactListFragment extends EaseContactListFragment {
                 getActivity().startActivity(new Intent(getActivity(), ContactInvitationActivity.class));
             }
         });
+
+        groupsItem = (LinearLayout) headerView.findViewById(R.id.ll_group_item);
+        groupsItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().startActivity(new Intent(getActivity(), GroupListActivity.class));
+            }
+        });
+
+        notifImageView.setVisibility(Model.getInstance().hasInviteNotif() ? View.VISIBLE : View.INVISIBLE);
+
+        listView.addHeaderView(headerView);
+        registerForContextMenu(listView);
 
         titleBar.setRightImageResource(R.drawable.em_add);
 
@@ -94,7 +106,7 @@ public class ContactListFragment extends EaseContactListFragment {
         if(appUsers != null){
             for(DemoUser user:appUsers.values()){
                 EaseUser easeUser = new EaseUser(user.getHxId());
-                easeUser.setNick(user.getUserName());
+                easeUser.setNick(user.getNick());
 
                 easeUsers.put(user.getHxId(),easeUser );
             }

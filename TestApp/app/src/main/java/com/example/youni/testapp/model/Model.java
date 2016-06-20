@@ -1,6 +1,5 @@
 package com.example.youni.testapp.model;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -129,7 +128,7 @@ public class Model {
                     for(String id:users){
                         DemoUser appUser = new DemoUser();
                         appUser.setHxId(id);
-                        appUser.setUserName(null);
+                        appUser.setNick(null);
                         mContacts.put(id, appUser);
                     }
                 }
@@ -160,7 +159,7 @@ public class Model {
 
         int index = 0;
         for(DemoUser user:mContacts.values()){
-            user.setUserName(user.getHxId() + "_" + NICKS[index%NICKS.length]);
+            user.setNick(user.getHxId() + "_" + NICKS[index % NICKS.length]);
             index++;
         }
         return null;
@@ -238,7 +237,7 @@ public class Model {
                 DemoUser user = mContacts.get(hxId);
 
                 if(user != null){
-                    return user.getUserName() + "发来一条消息";
+                    return user.getNick() + "发来一条消息";
                 }
                 return null;
             }
@@ -303,7 +302,7 @@ public class Model {
                 mH.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(mAppContext,"the user is removed : " + user.getUserName(),Toast.LENGTH_LONG).show();
+                        Toast.makeText(mAppContext,"the user is removed : " + user.getNick(),Toast.LENGTH_LONG).show();
                     }
                 });
 
@@ -344,7 +343,7 @@ public class Model {
                 inviteInfo.setStatus(InvitationInfo.InvitationStatus.INVITE_ACCEPT_BY_PEER);
 
                 DemoUser user = new DemoUser(s);
-                user.setUserName(s);
+                user.setNick(s);
 
                 inviteInfo.setUser(user);
 
@@ -373,7 +372,7 @@ public class Model {
                 if(user != null){
                     EaseUser easeUser = new EaseUser(username);
 
-                    easeUser.setNick(user.getUserName());
+                    easeUser.setNick(user.getNick());
 
                     easeUser.setAvatar("http://www.atguigu.com/images/logo.gif");
                     return easeUser;
@@ -402,7 +401,7 @@ public class Model {
      * @param user
      */
     private void fetchUserFromAppServer(DemoUser user) {
-        user.setUserName(user.getHxId() + "_凤凰");
+        user.setNick(user.getHxId() + "_凤凰");
     }
 
     public void onLoggedIn(String userName){

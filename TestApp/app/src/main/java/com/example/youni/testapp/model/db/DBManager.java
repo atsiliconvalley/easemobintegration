@@ -42,7 +42,7 @@ public class DBManager {
         for(DemoUser user:contacts){
             ContentValues values = new ContentValues();
 
-            values.put(UserTable.COL_USERNAME,user.getUserName());
+            values.put(UserTable.COL_USERNAME,user.getNick());
             values.put(UserTable.COL_HXID,user.getHxId());
             values.put(UserTable.COL_MYCONTACT,1);
             values.put(UserTable.COL_AVATAR,user.getAvatarPhoto());
@@ -67,7 +67,7 @@ public class DBManager {
 
         while(cursor.moveToNext()){
             DemoUser user = new DemoUser();
-            user.setUserName(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
+            user.setNick(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
             user.setHxId(cursor.getString(cursor.getColumnIndex(UserTable.COL_HXID)));
             user.setAvatarPhoto(cursor.getString(cursor.getColumnIndex(UserTable.COL_AVATAR)));
 
@@ -85,7 +85,7 @@ public class DBManager {
         ContentValues values = new ContentValues();
 
         values.put(UserTable.COL_HXID,user.getHxId());
-        values.put(UserTable.COL_USERNAME,user.getUserName());
+        values.put(UserTable.COL_USERNAME,user.getNick());
         values.put(UserTable.COL_AVATAR,user.getAvatarPhoto());
         values.put(UserTable.COL_MYCONTACT,1);
 
@@ -109,7 +109,7 @@ public class DBManager {
         while(cursor.moveToNext()){
             DemoUser user = new DemoUser();
             user.setHxId(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_HXID)));
-            user.setUserName(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_USERNAME)));
+            user.setNick(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_USERNAME)));
 
             InvitationInfo info = new InvitationInfo();
             info.setUser(user);
@@ -142,7 +142,7 @@ public class DBManager {
         values.put(InvitationMessageTable.COL_HXID,invitationInfo.getUser().getHxId());
         values.put(InvitationMessageTable.COL_INVITE_STATUS,invitationInfo.getStatus().ordinal());
         values.put(InvitationMessageTable.COL_REASON,invitationInfo.getReason());
-        values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getUser().getUserName());
+        values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getUser().getNick());
 
         db.replace(InvitationMessageTable.TABLE_NAME, null, values);
     }
