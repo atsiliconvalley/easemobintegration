@@ -17,7 +17,7 @@ import com.example.youni.testapp.model.DemoUser;
 import com.example.youni.testapp.model.Model;
 import com.example.youni.testapp.ui.AddFriendActivity;
 import com.example.youni.testapp.ui.ChatActivity;
-import com.example.youni.testapp.ui.ContactInvitationActivity;
+import com.example.youni.testapp.ui.InvitationActivity;
 import com.example.youni.testapp.ui.GroupListActivity;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.chat.EMClient;
@@ -53,7 +53,7 @@ public class ContactListFragment extends EaseContactListFragment {
             public void onClick(View v) {
                 notifImageView.setVisibility(View.INVISIBLE);
                 Model.getInstance().updateInviteNotif(false);
-                getActivity().startActivity(new Intent(getActivity(), ContactInvitationActivity.class));
+                getActivity().startActivity(new Intent(getActivity(), InvitationActivity.class));
             }
         });
 

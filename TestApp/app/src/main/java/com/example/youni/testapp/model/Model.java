@@ -529,7 +529,7 @@ public class Model {
             InvitationInfo invitationInfo = new InvitationInfo();
 
             invitationInfo.setGroupInfo(groupInfo);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPT);
+            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPTED);
 
             mH.post(new Runnable() {
                 @Override

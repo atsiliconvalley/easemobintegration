@@ -166,8 +166,8 @@ public class DBManager {
             return InvitationStatus.GROUP_INVITE_ACCEPTED;
         }
 
-        if(intStatus == InvitationStatus.GROUP_APPLICATION_ACCEPT.ordinal()){
-            return InvitationStatus.GROUP_APPLICATION_ACCEPT;
+        if(intStatus == InvitationStatus.GROUP_APPLICATION_ACCEPTED.ordinal()){
+            return InvitationStatus.GROUP_APPLICATION_ACCEPTED;
         }
 
         if(intStatus == InvitationStatus.GROUP_INVITE_DECLINED.ordinal()){
