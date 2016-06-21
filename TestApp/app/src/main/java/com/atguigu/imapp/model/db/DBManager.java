@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.IMInvitationGroupInfo;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 public class DBManager {
     private static final int DB_VERSION = 1;
+    private static final String TAG = "DBManager";
     private DBHelper mHelper;
 
     public DBManager(Context context, String dbName){
@@ -216,7 +218,9 @@ public class DBManager {
             values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getGroupInfo().getInviteTriggerUser());
         }
 
-        db.replace(InvitationMessageTable.TABLE_NAME, null, values);
+        long rt = db.replace(InvitationMessageTable.TABLE_NAME, null, values);
+
+        Log.d(TAG, "reslult : " + rt + " content values : " + values.toString());
     }
 
     public void removeInvitation(String hxId){
