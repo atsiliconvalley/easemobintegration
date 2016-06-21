@@ -32,7 +32,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.atguigu.imapp.controller.activity.SplashActivity">
+        <activity android:name=".controller.activity.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,24 +40,22 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.atguigu.imapp.controller.activity.LoginActivity"
+        <activity android:name=".controller.activity.LoginActivity"
+            android:launchMode="singleTask"/>
+
+        <activity android:name=".controller.activity.MainActivity"
             android:launchMode="singleTask"
-            >
+            android:windowSoftInputMode="adjustPan"/>
 
-        </activity>
-        <activity android:name="com.atguigu.imapp.controller.activity.MainActivity"
-            android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustPan">
-        </activity>
+        <activity android:name=".controller.activity.ChatActivity"/>
 
-        <activity android:name="com.atguigu.imapp.controller.activity.ChatActivity"/>
+        <activity android:name=".controller.activity.AddFriendActivity"/>
 
-        <activity android:name="com.atguigu.imapp.controller.activity.AddFriendActivity"/>
-
-        <activity android:name="com.atguigu.imapp.controller.activity.InvitationActivity"/>
-        <activity android:name="com.atguigu.imapp.controller.activity.GroupListActivity"/>
-        <activity android:name="com.atguigu.imapp.controller.activity.NewGroupActivity"/>
-        <activity android:name="com.atguigu.imapp.controller.activity.GroupPickContactsActivity"/>
+        <activity android:name=".controller.activity.InvitationActivity"/>
+        <activity android:name=".controller.activity.GroupListActivity"/>
+        <activity android:name=".controller.activity.NewGroupActivity"/>
+        <activity android:name=".controller.activity.GroupPickContactsActivity"/>
+        <activity android:name=".controller.activity.GroupDetailActivity"/>
 
         <activity android:name="com.hyphenate.easeui.ui.EaseShowBigImageActivity"/>
 
