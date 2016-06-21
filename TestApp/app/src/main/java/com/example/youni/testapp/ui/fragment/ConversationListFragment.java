@@ -26,7 +26,15 @@ public class ConversationListFragment extends EaseConversationListFragment {
         setConversationListItemClickListener(new EaseConversationListItemClickListener() {
             @Override
             public void onListItemClicked(EMConversation conversation) {
-                getActivity().startActivity(new Intent(getActivity(), ChatActivity.class).putExtra(EaseConstant.EXTRA_USER_ID,conversation.conversationId()));
+                Intent intent = new Intent(getActivity(), ChatActivity.class);
+
+                intent.putExtra(EaseConstant.EXTRA_USER_ID,conversation.conversationId());
+
+                if(conversation.getType() == EMConversation.EMConversationType.GroupChat){
+                    intent.putExtra(EaseConstant.EXTRA_CHAT_TYPE,EaseConstant.CHATTYPE_GROUP);
+                }
+
+                getActivity().startActivity(intent);
             }
         });
     }
