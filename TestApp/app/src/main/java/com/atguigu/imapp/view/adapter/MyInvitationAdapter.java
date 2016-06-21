@@ -107,14 +107,14 @@ public class MyInvitationAdapter extends BaseAdapter {
                 holder.btnAccept.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        invitationListener.onAccepted(user.getHxId());
+                        invitationListener.onAccepted(inviteInfo);
                     }
                 });
 
                 holder.btnReject.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        invitationListener.onRejected(user.getHxId());
+                        invitationListener.onRejected(inviteInfo);
                     }
                 });
             }
@@ -212,8 +212,8 @@ public class MyInvitationAdapter extends BaseAdapter {
     }
 
     public interface OnInvitationListener {
-        void onAccepted(String hxId);
-        void onRejected(String hxId);
+        void onAccepted(InvitationInfo invitationInfo);
+        void onRejected(InvitationInfo invitationInfo);
         void onGroupApplicationAccept(InvitationInfo invitationInfo);
         void onGroupInvitationAccept(InvitationInfo invitationInfo);
 

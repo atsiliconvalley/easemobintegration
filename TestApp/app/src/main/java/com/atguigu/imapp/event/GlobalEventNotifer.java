@@ -1,7 +1,10 @@
 package com.atguigu.imapp.event;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
+import com.atguigu.imapp.common.Constant;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
@@ -100,6 +103,8 @@ public class GlobalEventNotifer {
             for (EMGroupChangeListener listener:groupChangeListeners){
                 listener.onInvitationReceived(s,s1,s2,s3);
             }
+
+            broadCastGroupInvitation();
         }
 
         @Override
@@ -107,6 +112,8 @@ public class GlobalEventNotifer {
             for (EMGroupChangeListener listener:groupChangeListeners){
                 listener.onApplicationReceived(s,s1,s2,s3);
             }
+
+            broadCastGroupInvitation();
         }
 
         @Override
@@ -122,35 +129,39 @@ public class GlobalEventNotifer {
             for (EMGroupChangeListener listener:groupChangeListeners){
                 listener.onApplicationDeclined(s,s1,s2,s3);
             }
+
+            broadCastGroupInvitation();
         }
 
         @Override
         public void onInvitationAccpted(String s, String s1, String s2) {
             for(EMGroupChangeListener listener:groupChangeListeners){
-                listener.onInvitationAccpted(s,s1,s2);
+                listener.onInvitationAccpted(s, s1, s2);
             }
         }
 
         @Override
         public void onInvitationDeclined(String s, String s1, String s2) {
             for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onInvitationDeclined(s,s1,s2);
+                listener.onInvitationDeclined(s, s1, s2);
             }
+
+            broadCastGroupInvitation();
         }
 
         @Override
         public void onUserRemoved(String s, String s1) {
-
+            broadCastGroupChanged();
         }
 
         @Override
         public void onGroupDestroy(String s, String s1) {
-
+            broadCastGroupChanged();
         }
 
         @Override
         public void onAutoAcceptInvitationFromGroup(String s, String s1, String s2) {
-
+            broadCastGroupInvitation();
         }
     };
 
@@ -174,6 +185,8 @@ public class GlobalEventNotifer {
             for(EMContactListener listener:contactListeners){
                 listener.onContactInvited(s, s1);
             }
+
+            broadCastContactInvitation();
         }
 
         @Override
@@ -188,7 +201,27 @@ public class GlobalEventNotifer {
             for(EMContactListener listener:contactListeners){
                 listener.onContactRefused(s);
             }
+
+            broadCastContactInvitation();
         }
     };
+
+    private void broadCastGroupChanged(){
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+
+        lbm.sendBroadcast(new Intent(Constant.GROUP_CHANGED));
+    }
+
+    private void broadCastGroupInvitation(){
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+
+        lbm.sendBroadcast(new Intent(Constant.GROUP_INVITATION_MESSAGE_CHANGED));
+    }
+
+    private void broadCastContactInvitation(){
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+
+        lbm.sendBroadcast(new Intent(Constant.CONTACT_INVITATION_CHANGED));
+    }
 
 }

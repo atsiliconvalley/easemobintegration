@@ -1,12 +1,16 @@
 package com.atguigu.imapp.controller.activity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.common.Constant;
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.model.InvitationInfo;
 import com.atguigu.imapp.model.Model;
@@ -23,7 +27,6 @@ import java.util.List;
  * Created by youni on 2016/5/25.
  */
 public class InvitationActivity extends Activity implements MyInvitationAdapter.OnInvitationListener {
-    private List<InvitationInfo> mInvitations;
     private MyInvitationAdapter mAdapter;
     private Handler mH = new Handler();
     private Activity me;
@@ -38,15 +41,11 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     }
 
     void init(){
-        mInvitations = new ArrayList<>();
-        mAdapter = new MyInvitationAdapter(this,this,mInvitations);
+        mAdapter = new MyInvitationAdapter(this,this,null);
 
         ListView lv = (ListView) findViewById(R.id.lv_invitation_list);
 
         lv.setAdapter(mAdapter);
-
-        GlobalEventNotifer.getInstance().addContactListeners(contactListener);
-        GlobalEventNotifer.getInstance().addGroupChangeListener(groupChangeListener);
 
         setupInvitations();
     }
@@ -54,9 +53,6 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        GlobalEventNotifer.getInstance().removeContactListener(contactListener);
-        GlobalEventNotifer.getInstance().removeGroupChangeListener(groupChangeListener);
     }
 
     void setupInvitations(){
@@ -69,15 +65,14 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     }
 
     @Override
-    public void onAccepted(final String hxId) {
+    public void onAccepted(final InvitationInfo invitationInfo) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().contactManager().acceptInvitation(hxId);
+                    EMClient.getInstance().contactManager().acceptInvitation(invitationInfo.getUser().getHxId());
 
-                    //Model.getInstance().removeInvitation(hxId);
-                    Model.getInstance().updateInvitation(InvitationInfo.InvitationStatus.INVITE_ACCEPT,hxId);
+                    Model.getInstance().updateInvitation(InvitationInfo.InvitationStatus.INVITE_ACCEPT,invitationInfo.getUser().getHxId());
 
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
 
@@ -95,13 +90,13 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     }
 
     @Override
-    public void onRejected(final String hxId) {
+    public void onRejected(final InvitationInfo invitationInfo) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().contactManager().declineInvitation(hxId);
-                    Model.getInstance().removeInvitation(hxId);
+                    EMClient.getInstance().contactManager().declineInvitation(invitationInfo.getUser().getHxId());
+                    Model.getInstance().removeInvitation(invitationInfo.getUser().getHxId());
 
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
                 } catch (HyphenateException e) {
@@ -207,82 +202,19 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
         }).start();
     }
 
-    class MyContactListener implements EMContactListener{
-
+    private BroadcastReceiver invitationChangedReceived = new BroadcastReceiver() {
         @Override
-        public void onContactAdded(String s) {
-
-        }
-
-        @Override
-        public void onContactDeleted(String s) {
-
-        }
-
-        @Override
-        public void onContactInvited(String s, String s1) {
-
-        }
-
-        @Override
-        public void onContactAgreed(String s) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onContactRefused(String s) {
-
-        }
-    }
-
-    EMGroupChangeListener groupChangeListener = new EMGroupChangeListener() {
-        @Override
-        public void onInvitationReceived(String s, String s1, String s2, String s3) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onApplicationReceived(String s, String s1, String s2, String s3) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onApplicationAccept(String s, String s1, String s2) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onApplicationDeclined(String s, String s1, String s2, String s3) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onInvitationAccpted(String s, String s1, String s2) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onInvitationDeclined(String s, String s1, String s2) {
-            mAdapter.refresh(Model.getInstance().getInvitationInfo());
-        }
-
-        @Override
-        public void onUserRemoved(String s, String s1) {
-
-        }
-
-        @Override
-        public void onGroupDestroy(String s, String s1) {
-
-        }
-
-        @Override
-        public void onAutoAcceptInvitationFromGroup(String s, String s1, String s2) {
-
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()){
+                case Constant.CONTACT_INVITATION_CHANGED:
+                case Constant.GROUP_INVITATION_MESSAGE_CHANGED:
+                    mAdapter.refresh(Model.getInstance().getInvitationInfo());
+                    break;
+                default:
+                    break;
+            }
         }
     };
-
-    EMContactListener contactListener = new MyContactListener();
 }
 
 

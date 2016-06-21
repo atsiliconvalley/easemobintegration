@@ -5,7 +5,16 @@ package com.atguigu.imapp.common;
  */
 public class Constant {
     public static final String GROUP_ID = "group_id";
-
     // Action
+    // exit the group: leave group or destroy group
     public static final String EXIT_GROUP_ACTION = "exit_group_action";
+
+    // group change actions,used to notify the ui to get refreshed
+    public static final String GROUP_CHANGED = "group_changed_action";
+
+    // group invitation or application message changed
+    public static final String GROUP_INVITATION_MESSAGE_CHANGED = "group_invitation_message_changed_action";
+
+    // contact invitation message changed
+    public static final String CONTACT_INVITATION_CHANGED = "contact_invitation_message_changed_action";
 }
