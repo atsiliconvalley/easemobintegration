@@ -8,7 +8,7 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.view.adapter.MyGroupAdapter;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;

@@ -10,7 +10,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMGroupManager;
 import com.hyphenate.exceptions.HyphenateException;

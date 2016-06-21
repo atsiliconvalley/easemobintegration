@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.controller.activity.LoginActivity;
 import com.hyphenate.EMCallBack;

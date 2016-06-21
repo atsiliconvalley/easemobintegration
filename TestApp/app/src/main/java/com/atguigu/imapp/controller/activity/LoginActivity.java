@@ -10,7 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;

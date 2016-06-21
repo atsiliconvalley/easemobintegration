@@ -6,7 +6,7 @@ import android.os.Handler;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.InvitationInfo;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.view.adapter.MyInvitationAdapter;

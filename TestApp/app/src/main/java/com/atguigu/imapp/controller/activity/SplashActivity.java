@@ -7,7 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 

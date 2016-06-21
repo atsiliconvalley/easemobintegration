@@ -8,7 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.InvitationInfo;
 

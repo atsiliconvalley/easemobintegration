@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.example.youni.testapp.R;
+import com.atguigu.imapp.R;
 import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.controller.activity.AddFriendActivity;
