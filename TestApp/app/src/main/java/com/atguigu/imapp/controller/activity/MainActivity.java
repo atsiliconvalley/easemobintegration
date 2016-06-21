@@ -9,6 +9,8 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.event.GlobalEventNotifer;
+import com.atguigu.imapp.event.OnSyncListener;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.controller.fragment.ContactListFragment;
 import com.atguigu.imapp.controller.fragment.ConversationListFragment;
@@ -26,7 +28,7 @@ public class MainActivity extends FragmentActivity {
     Fragment mSetttingsFragment;
     ConversationListFragment mConversationListFragment;
     ContactListFragment mContactListFragment;
-    Model.OnSyncListener mContactSyncListener;
+    OnSyncListener mContactSyncListener;
     int currentId;
     EMContactListener mContactListener;
 
@@ -153,7 +155,7 @@ public class MainActivity extends FragmentActivity {
             }
         };
 
-        Model.getInstance().addContactListeners(mContactListener);
+        GlobalEventNotifer.getInstance().addContactListeners(mContactListener);
     }
 
     @Override
@@ -168,7 +170,7 @@ public class MainActivity extends FragmentActivity {
 
         EMClient.getInstance().chatManager().removeMessageListener(messageListener);
         if(mContactListener != null){
-            Model.getInstance().removeContactListener(mContactListener);
+            GlobalEventNotifer.getInstance().removeContactListener(mContactListener);
         }
     }
 

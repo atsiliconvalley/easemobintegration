@@ -4,17 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.model.db.PreferenceUtils;
 import com.atguigu.imapp.controller.activity.MainActivity;
 import com.hyphenate.EMCallBack;
-import com.hyphenate.EMContactListener;
-import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMOptions;
-import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.easeui.controller.EaseUI;
 import com.hyphenate.easeui.domain.EaseUser;
 import com.hyphenate.easeui.model.EaseNotifier;
@@ -22,14 +19,15 @@ import com.hyphenate.exceptions.HyphenateException;
 import com.atguigu.imapp.model.db.DBManager;
 
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by youni on 2016/5/19.
+ *
+ * Model - 代表等着整个APP的数据存取模型，所有的其他的类Controller和View实体类都必须且只能通过Model类获取数据模型
+ *
  */
 public class Model {
     private final static String TAG = "Demo Model";
@@ -37,21 +35,15 @@ public class Model {
     private Context mAppContext;
     private static Model me = new Model();
     private Map<String,DemoUser> mContacts = new HashMap<>();
-    private List<OnSyncListener> mContactSyncLiseners;
     private String mCurrentUser;
     private DBManager mDBManager;
     private PreferenceUtils mPreference;
     private boolean mIsContactSynced = false;
-    private List<EMContactListener> mContactListeners;
-    private List<EMGroupChangeListener> groupChangeListeners;
+    private EventListener eventListener;
 
     // used to show the toast
     private Handler mH = new Handler();
 
-    public static interface OnSyncListener{
-        public void onSuccess();
-        public void onFailed();
-    }
 
     static public Model getInstance(){
         return me;
@@ -72,8 +64,12 @@ public class Model {
             return false;
         }
 
-        mContactSyncLiseners = new ArrayList<>();
-        groupChangeListeners = new ArrayList<>();
+        // 1. 首先必需先初始化GlobalEventNotifer
+        GlobalEventNotifer.getInstance().init(appContext);
+
+        // 2. 创建Model Eevent listener
+        eventListener = new EventListener(appContext);
+
         mPreference = new PreferenceUtils(mAppContext);
         mIsContactSynced = mPreference.isContactSynced();
 
@@ -124,7 +120,7 @@ public class Model {
                     mIsContactSynced = true;
                     mPreference.setContactSynced(true);
                 } catch (HyphenateException e) {
-                    notifyContactSyncChanged(false);
+                    GlobalEventNotifer.getInstance().notifyContactSyncChanged(false);
                     e.printStackTrace();
 
                     return;
@@ -150,7 +146,7 @@ public class Model {
 
                 mDBManager.saveContacts(mContacts.values());
 
-                notifyContactSyncChanged(true);
+                GlobalEventNotifer.getInstance().notifyContactSyncChanged(true);
             }
         }).start();
     }
@@ -194,230 +190,33 @@ public class Model {
 
         mContacts.put(user.getHxId(), user);
 
+        // 记住应该还要去自己的APP服务器上去获取联系人信息
+        fetchUserFromAppServer(user);
+
         // save to db;
         mDBManager.saveContact(user);
     }
 
     public void deleteContact(String hxId){
+        if(mContacts.get(hxId) == null){
+            return;
+        }
+
         mContacts.remove(hxId);
         mDBManager.deleteContact(new DemoUser(hxId));
         mDBManager.removeInvitation(hxId);
-    }
-
-    public void addOnContactSyncListener(OnSyncListener listener){
-        if(listener == null){
-            return;
-        }
-
-        if(mContactSyncLiseners.contains(listener)){
-            return;
-        }
-
-        mContactSyncLiseners.add(listener);
-    }
-
-    private void notifyContactSyncChanged(boolean success){
-        for(OnSyncListener listener:mContactSyncLiseners){
-            if(success){
-                listener.onSuccess();
-            }else{
-                listener.onFailed();
-            }
-        }
     }
 
     public Map<String,DemoUser> getContacts(){
         return mContacts;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isContactSynced(){
         return mIsContactSynced;
-    }
-
-    private void initProvider(){
-        EaseUI.getInstance().getNotifier().setNotificationInfoProvider(new EaseNotifier.EaseNotificationInfoProvider() {
-            @Override
-            public String getDisplayedText(EMMessage message) {
-                String hxId = message.getFrom();
-
-                DemoUser user = mContacts.get(hxId);
-
-                if(user != null){
-                    return user.getNick() + "发来一条消息";
-                }
-                return null;
-            }
-
-            @Override
-            public String getLatestText(EMMessage message, int fromUsersNum, int messageNum) {
-                return null;
-            }
-
-            @Override
-            public String getTitle(EMMessage message) {
-                return null;
-            }
-
-            @Override
-            public int getSmallIcon(EMMessage message) {
-                return 0;
-            }
-
-            @Override
-            public Intent getLaunchIntent(EMMessage message) {
-                return new Intent(mAppContext,MainActivity.class);
-            }
-        });
-    }
-
-    private void initListener() {
-        mContactListeners = new ArrayList<>();
-
-        EMClient.getInstance().contactManager().setContactListener(new EMContactListener() {
-            @Override
-            public void onContactAdded(String s) {
-                Log.d(TAG,"onContactAdded : " + s);
-                if(!mContacts.containsKey(s)){
-                    DemoUser user = new DemoUser();
-                    user.setHxId(s);
-                    mContacts.put(s, user);
-
-                    // 记住应该还要去自己的APP服务器上去获取联系人信息
-                    fetchUserFromAppServer(user);
-
-                    mDBManager.saveContact(user);
-
-                    for(EMContactListener listener:mContactListeners){
-                        listener.onContactAdded(s);
-                    }
-                }
-            }
-
-            @Override
-            public void onContactDeleted(String s) {
-                Log.d(TAG,"onContactDeleted : " + s);
-
-                final DemoUser user = mContacts.get(s);
-
-                if(user == null){
-                    return;
-                }
-
-                deleteContact(s);
-
-                mH.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(mAppContext,"the user is removed : " + user.getNick(),Toast.LENGTH_LONG).show();
-                    }
-                });
-
-                for(EMContactListener listener:mContactListeners){
-                    listener.onContactDeleted(s);
-                }
-            }
-
-            @Override
-            public void onContactInvited(String hxId, String reason) {
-                Log.d(TAG, "onContactInvited : " + hxId);
-
-                updateInviteNotif(true);
-
-                DemoUser user = new DemoUser(hxId);
-
-                // 从app服务器获取昵称
-                // 我在这里就设置为个临时的
-                fetchUserFromAppServer(user);
-                InvitationInfo inviteInfo = new InvitationInfo();
-                inviteInfo.setUser(user);
-                inviteInfo.setReason("加个好友吧");
-                inviteInfo.setStatus(InvitationInfo.InvitationStatus.NEW_INVITE);
-
-                mDBManager.addInvitation(inviteInfo);
-
-                for(EMContactListener listener:mContactListeners){
-                    listener.onContactInvited(hxId, reason);
-                }
-            }
-
-            @Override
-            public void onContactAgreed(String s) {
-                Log.d(TAG, "onContactInvited : " + s);
-
-                InvitationInfo inviteInfo = new InvitationInfo();
-                inviteInfo.setReason("你的邀请已经被接受");
-                inviteInfo.setStatus(InvitationInfo.InvitationStatus.INVITE_ACCEPT_BY_PEER);
-
-                DemoUser user = new DemoUser(s);
-                user.setNick(s);
-
-                inviteInfo.setUser(user);
-
-                mDBManager.addInvitation(inviteInfo);
-
-                for(EMContactListener listener:mContactListeners){
-                    listener.onContactAgreed(s);
-                }
-            }
-
-            @Override
-            public void onContactRefused(String s) {
-                Log.d(TAG,"onContactRefused : " + s);
-
-                for(EMContactListener listener:mContactListeners){
-                    listener.onContactRefused(s);
-                }
-            }
-        });
-
-        EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
-            @Override
-            public EaseUser getUser(String username) {
-                DemoUser user = mContacts.get(username);
-
-                if (user != null) {
-                    EaseUser easeUser = new EaseUser(username);
-
-                    easeUser.setNick(user.getNick());
-
-                    easeUser.setAvatar("http://www.atguigu.com/images/logo.gif");
-                    return easeUser;
-                }
-
-                return null;
-            }
-        });
-
-        EMClient.getInstance().groupManager().addGroupChangeListener(groupChangeListener);
-
-    }
-
-    public void addContactListeners(EMContactListener listener){
-        if(mContactListeners.contains(listener)){
-            return;
-        }
-
-        mContactListeners.add(listener);
-    }
-
-    public void removeContactListener(EMContactListener listener){
-        mContactListeners.remove(listener);
-    }
-
-    public void addGroupChangeListener(EMGroupChangeListener groupChangeListener){
-        if(groupChangeListeners.contains(groupChangeListener)){
-            return;
-        }
-
-        groupChangeListeners.add(groupChangeListener);
-    }
-
-    public void removeGroupChangeListener(EMGroupChangeListener groupChangeListener){
-        if(groupChangeListener == null){
-            return;
-        }
-
-        groupChangeListeners.remove(groupChangeListener);
     }
 
     /**
@@ -436,6 +235,7 @@ public class Model {
 
         mCurrentUser = userName;
         mDBManager = new DBManager(mAppContext,mCurrentUser);
+        eventListener.setDbManager(mDBManager);
     }
 
     public List<InvitationInfo> getInvitationInfo(){
@@ -457,230 +257,6 @@ public class Model {
     public boolean hasInviteNotif(){
         return mDBManager.hasInviteNotif();
     }
-
-//    void 	onInvitationReceived (String groupId, String groupName, String inviter, String reason)
-//
-//    void 	onApplicationReceived (String groupId, String groupName, String applicant, String reason)
-//
-//    void 	onApplicationAccept (String groupId, String groupName, String accepter)
-//
-//    void 	onApplicationDeclined (String groupId, String groupName, String decliner, String reason)
-//
-//    void 	onInvitationAccpted (String groupId, String invitee, String reason)
-//
-//    void 	onInvitationDeclined (String groupId, String invitee, String reason)
-//
-//    void 	onUserRemoved (String groupId, String groupName)
-//
-//    void 	onGroupDestroy (String groupId, String groupName)
-//
-//    void 	onAutoAcceptInvitationFromGroup (String groupId, String inviter, String inviteMessage)
-
-    private EMGroupChangeListener groupChangeListener = new EMGroupChangeListener() {
-        @Override
-        public void onInvitationReceived(String s, String s1, String s2, String s3) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s1);
-            groupInfo.setInviteTriggerUser(s2);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setReason(s3);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_INVITE);
-            invitationInfo.setGroupInfo(groupInfo);
-
-            mDBManager.addInvitation(invitationInfo);
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext,"收到邀请 : " + groupInfo,Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onInvitationReceived(s,s1,s2,s3);
-            }
-
-        }
-
-        @Override
-        public void onApplicationReceived(String s, String s1, String s2, String s3) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s1);
-            groupInfo.setInviteTriggerUser(s2);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setReason(s3);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_APPLICATION);
-            invitationInfo.setGroupInfo(groupInfo);
-
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "收到申请 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onApplicationReceived(s,s1,s2,s3);
-            }
-        }
-
-        @Override
-        public void onApplicationAccept(String s, String s1, String s2) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s1);
-            groupInfo.setInviteTriggerUser(s2);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setGroupInfo(groupInfo);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPTED);
-
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "申请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            String stringInviteAccept = " 接收了你的邀请";
-
-            // 加群申请被同意
-            EMMessage msg = EMMessage.createReceiveMessage(EMMessage.Type.TXT);
-            msg.setChatType(EMMessage.ChatType.GroupChat);
-            msg.setFrom(groupInfo.getInviteTriggerUser());
-            msg.setTo(groupInfo.getGroupId());
-            msg.setMsgId(UUID.randomUUID().toString());
-            msg.addBody(new EMTextMessageBody(groupInfo.getInviteTriggerUser() + " " + stringInviteAccept));
-            msg.setStatus(EMMessage.Status.SUCCESS);
-
-            // 保存同意消息
-            EMClient.getInstance().chatManager().saveMessage(msg);
-
-            for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onApplicationAccept(s,s1,s2);
-            }
-        }
-
-        @Override
-        public void onApplicationDeclined(String s, String s1, String s2, String s3) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s1);
-            groupInfo.setInviteTriggerUser(s2);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setReason(s3);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_DECLINED);
-            invitationInfo.setGroupInfo(groupInfo);
-
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "申请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            for(EMGroupChangeListener listener:groupChangeListeners){
-                listener.onApplicationDeclined(s,s1,s2,s3);
-            }
-        }
-
-        @Override
-        public void onInvitationAccpted(String s, String s1, String s2) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s);
-            groupInfo.setInviteTriggerUser(s1);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setGroupInfo(groupInfo);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
-
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "邀请被接收 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onInvitationAccpted(s,s1,s2);
-            }
-        }
-
-        @Override
-        public void onInvitationDeclined(String s, String s1, String s2) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s);
-            groupInfo.setInviteTriggerUser(s1);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setGroupInfo(groupInfo);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_DECLINED);
-
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "邀请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            for (EMGroupChangeListener listener:groupChangeListeners){
-                listener.onInvitationDeclined(s,s1,s2);
-            }
-        }
-
-        @Override
-        public void onUserRemoved(String s, String s1) {
-
-        }
-
-        @Override
-        public void onGroupDestroy(String s, String s1) {
-
-        }
-
-        @Override
-        public void onAutoAcceptInvitationFromGroup(String s, String s1, String s2) {
-            final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
-            groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s);
-            groupInfo.setInviteTriggerUser(s1);
-
-            InvitationInfo invitationInfo = new InvitationInfo();
-
-            invitationInfo.setGroupInfo(groupInfo);
-            invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
-            mDBManager.addInvitation(invitationInfo);
-
-            mH.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mAppContext, "邀请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    };
 
     public void acceptGroupInvitation(InvitationInfo invitationInfo){
         invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_ACCEPT_INVITE);
@@ -705,5 +281,64 @@ public class Model {
 
         mDBManager.addInvitation(invitationInfo);
 
+    }
+
+    //==============================================================
+    // please put private api here
+    //==============================================================
+    private void initProvider(){
+        EaseUI.getInstance().getNotifier().setNotificationInfoProvider(new EaseNotifier.EaseNotificationInfoProvider() {
+            @Override
+            public String getDisplayedText(EMMessage message) {
+                String hxId = message.getFrom();
+
+                DemoUser user = mContacts.get(hxId);
+
+                if (user != null) {
+                    return user.getNick() + "发来一条消息";
+                }
+                return null;
+            }
+
+            @Override
+            public String getLatestText(EMMessage message, int fromUsersNum, int messageNum) {
+                return null;
+            }
+
+            @Override
+            public String getTitle(EMMessage message) {
+                return null;
+            }
+
+            @Override
+            public int getSmallIcon(EMMessage message) {
+                return 0;
+            }
+
+            @Override
+            public Intent getLaunchIntent(EMMessage message) {
+                return new Intent(mAppContext, MainActivity.class);
+            }
+        });
+    }
+
+    private void initListener() {
+        EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
+            @Override
+            public EaseUser getUser(String username) {
+                DemoUser user = mContacts.get(username);
+
+                if (user != null) {
+                    EaseUser easeUser = new EaseUser(username);
+
+                    easeUser.setNick(user.getNick());
+
+                    easeUser.setAvatar("http://www.atguigu.com/images/logo.gif");
+                    return easeUser;
+                }
+
+                return null;
+            }
+        });
     }
 }

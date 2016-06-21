@@ -7,6 +7,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.model.InvitationInfo;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.view.adapter.MyInvitationAdapter;
@@ -44,8 +45,8 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
 
         lv.setAdapter(mAdapter);
 
-        Model.getInstance().addContactListeners(contactListener);
-        Model.getInstance().addGroupChangeListener(groupChangeListener);
+        GlobalEventNotifer.getInstance().addContactListeners(contactListener);
+        GlobalEventNotifer.getInstance().addGroupChangeListener(groupChangeListener);
 
         setupInvitations();
     }
@@ -54,8 +55,8 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     protected void onDestroy() {
         super.onDestroy();
 
-        Model.getInstance().removeContactListener(contactListener);
-        Model.getInstance().removeGroupChangeListener(groupChangeListener);
+        GlobalEventNotifer.getInstance().removeContactListener(contactListener);
+        GlobalEventNotifer.getInstance().removeGroupChangeListener(groupChangeListener);
     }
 
     void setupInvitations(){

@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.event.GlobalEventNotifer;
+import com.atguigu.imapp.event.OnSyncListener;
 import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.controller.activity.AddFriendActivity;
@@ -34,7 +36,7 @@ import java.util.Map;
  */
 public class ContactListFragment extends EaseContactListFragment {
 
-    private Model.OnSyncListener mContactSyncListener;
+    private OnSyncListener mContactSyncListener;
     ImageView notifImageView;
     private String hxId;
     private LinearLayout groupsItem;
@@ -79,7 +81,7 @@ public class ContactListFragment extends EaseContactListFragment {
             }
         });
 
-        mContactSyncListener = new Model.OnSyncListener() {
+        mContactSyncListener = new OnSyncListener() {
             @Override
             public void onSuccess() {
                 setupContacts();
@@ -91,14 +93,14 @@ public class ContactListFragment extends EaseContactListFragment {
             }
         };
 
-        Model.getInstance().addOnContactSyncListener(mContactSyncListener);
+        GlobalEventNotifer.getInstance().addOnContactSyncListener(mContactSyncListener);
 
         if(Model.getInstance().isContactSynced()){
             Log.d("ContactListFragment", "already synced");
             setupContacts();
         }
 
-        Model.getInstance().addContactListeners(mContactListener);
+        GlobalEventNotifer.getInstance().addContactListeners(mContactListener);
     }
 
     public void setupContacts(){
@@ -215,6 +217,6 @@ public class ContactListFragment extends EaseContactListFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Model.getInstance().removeContactListener(mContactListener);
+        GlobalEventNotifer.getInstance().removeContactListener(mContactListener);
     }
 }
