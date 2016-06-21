@@ -1,18 +1,11 @@
-package com.example.youni.testapp.ui.fragment;
+package com.atguigu.imapp.controller.fragment;
 
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
-import com.example.youni.testapp.ui.ChatActivity;
+import com.atguigu.imapp.controller.activity.ChatActivity;
 import com.hyphenate.chat.EMConversation;
 import com.hyphenate.easeui.EaseConstant;
 import com.hyphenate.easeui.ui.EaseConversationListFragment;
-import com.hyphenate.easeui.widget.EaseConversationList;
 
 /**
  * Created by youni on 2016/5/19.

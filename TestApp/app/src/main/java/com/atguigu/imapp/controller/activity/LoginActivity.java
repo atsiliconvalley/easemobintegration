@@ -1,4 +1,4 @@
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -11,7 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.Model;
+import com.atguigu.imapp.model.Model;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMGroup;

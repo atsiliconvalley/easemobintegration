@@ -1,4 +1,4 @@
-package com.example.youni.testapp.model;
+package com.atguigu.imapp.model;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,8 +6,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.youni.testapp.model.db.PreferenceUtils;
-import com.example.youni.testapp.ui.MainActivity;
+import com.atguigu.imapp.model.db.PreferenceUtils;
+import com.atguigu.imapp.controller.activity.MainActivity;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.EMGroupChangeListener;
@@ -19,7 +19,7 @@ import com.hyphenate.easeui.controller.EaseUI;
 import com.hyphenate.easeui.domain.EaseUser;
 import com.hyphenate.easeui.model.EaseNotifier;
 import com.hyphenate.exceptions.HyphenateException;
-import com.example.youni.testapp.model.db.DBManager;
+import com.atguigu.imapp.model.db.DBManager;
 
 
 import java.util.ArrayList;

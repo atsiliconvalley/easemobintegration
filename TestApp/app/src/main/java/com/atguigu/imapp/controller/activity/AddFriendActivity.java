@@ -1,4 +1,4 @@
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -12,8 +12,6 @@ import android.widget.Toast;
 import com.example.youni.testapp.R;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.exceptions.HyphenateException;
-
-import org.w3c.dom.Text;
 
 /**
  * Created by youni on 2016/5/22.

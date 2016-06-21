@@ -1,4 +1,4 @@
-package com.example.youni.testapp.ui.fragment;
+package com.atguigu.imapp.controller.fragment;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -13,12 +13,12 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.DemoUser;
-import com.example.youni.testapp.model.Model;
-import com.example.youni.testapp.ui.AddFriendActivity;
-import com.example.youni.testapp.ui.ChatActivity;
-import com.example.youni.testapp.ui.InvitationActivity;
-import com.example.youni.testapp.ui.GroupListActivity;
+import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.Model;
+import com.atguigu.imapp.controller.activity.AddFriendActivity;
+import com.atguigu.imapp.controller.activity.ChatActivity;
+import com.atguigu.imapp.controller.activity.InvitationActivity;
+import com.atguigu.imapp.controller.activity.GroupListActivity;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;

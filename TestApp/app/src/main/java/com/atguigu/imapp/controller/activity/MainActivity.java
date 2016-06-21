@@ -1,4 +1,4 @@
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,17 +9,15 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.DemoUser;
-import com.example.youni.testapp.model.Model;
-import com.example.youni.testapp.ui.fragment.ContactListFragment;
-import com.example.youni.testapp.ui.fragment.ConversationListFragment;
-import com.example.youni.testapp.ui.fragment.SettingsFragment;
+import com.atguigu.imapp.model.Model;
+import com.atguigu.imapp.controller.fragment.ContactListFragment;
+import com.atguigu.imapp.controller.fragment.ConversationListFragment;
+import com.atguigu.imapp.controller.fragment.SettingsFragment;
 import com.hyphenate.EMContactListener;
 import com.hyphenate.EMMessageListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.easeui.controller.EaseUI;
-import com.hyphenate.exceptions.HyphenateException;
 
 import java.util.List;
 

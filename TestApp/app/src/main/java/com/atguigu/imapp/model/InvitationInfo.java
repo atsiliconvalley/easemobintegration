@@ -1,4 +1,4 @@
-package com.example.youni.testapp.model;
+package com.atguigu.imapp.model;
 
 /**
  * Created by youni on 2016/5/25.

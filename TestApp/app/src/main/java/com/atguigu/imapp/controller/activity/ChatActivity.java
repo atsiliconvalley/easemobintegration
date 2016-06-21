@@ -1,4 +1,4 @@
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;

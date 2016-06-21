@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +19,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.DemoUser;
-import com.example.youni.testapp.model.Model;
+import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
 import com.hyphenate.chat.EMGroup;

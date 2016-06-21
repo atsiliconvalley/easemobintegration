@@ -1,4 +1,4 @@
-package com.example.youni.testapp.model.db;
+package com.atguigu.imapp.model.db;
 
 import android.content.Context;
 import android.content.SharedPreferences;

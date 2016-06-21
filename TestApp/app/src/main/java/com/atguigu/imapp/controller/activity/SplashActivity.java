@@ -1,15 +1,14 @@
-package com.example.youni.testapp.ui;
+package com.atguigu.imapp.controller.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.AvoidXfermode;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.Model;
+import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
 /**

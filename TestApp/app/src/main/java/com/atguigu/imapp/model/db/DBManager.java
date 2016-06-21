@@ -1,4 +1,4 @@
-package com.example.youni.testapp.model.db;
+package com.atguigu.imapp.model.db;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -6,10 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.example.youni.testapp.model.DemoUser;
-import com.example.youni.testapp.model.IMInvitationGroupInfo;
-import com.example.youni.testapp.model.InvitationInfo;
-import com.example.youni.testapp.model.InvitationInfo.InvitationStatus;
+import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.IMInvitationGroupInfo;
+import com.atguigu.imapp.model.InvitationInfo;
+import com.atguigu.imapp.model.InvitationInfo.InvitationStatus;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -129,6 +129,7 @@ public class DBManager {
                 groupInfo.setGroupName(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_GROUP_NAME)));
                 groupInfo.setInviteTriggerUser(name);
 
+                info.setGroupInfo(groupInfo);
             }
 
 

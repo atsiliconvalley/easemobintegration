@@ -1,19 +1,17 @@
-package com.example.youni.testapp.ui.fragment;
+package com.atguigu.imapp.controller.fragment;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.example.youni.testapp.R;
-import com.example.youni.testapp.model.Model;
-import com.example.youni.testapp.ui.LoginActivity;
+import com.atguigu.imapp.model.Model;
+import com.atguigu.imapp.controller.activity.LoginActivity;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
 
