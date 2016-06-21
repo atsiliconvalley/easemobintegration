@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import com.example.youni.testapp.R;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMGroup;
+import com.hyphenate.easeui.EaseConstant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +58,23 @@ public class GroupListActivity extends Activity {
             public void onClick(View v) {
                 // try to create a new group
 
-                startActivity(new Intent(GroupListActivity.this,NewGroupActivity.class));
+                startActivity(new Intent(GroupListActivity.this, NewGroupActivity.class));
+            }
+        });
+
+        lvGroup.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // 我们用position-1代表，第一个位置是创建群组的Item
+                int index = position -1;
+                Intent startChat = new Intent(GroupListActivity.this,ChatActivity.class);
+
+                String groupId = EMClient.getInstance().groupManager().getAllGroups().get(index).getGroupId();
+
+                startChat.putExtra(EaseConstant.EXTRA_USER_ID,groupId);
+                startChat.putExtra(EaseConstant.EXTRA_CHAT_TYPE,EaseConstant.CHATTYPE_GROUP);
+                startActivity(startChat);
+                finish();
             }
         });
 

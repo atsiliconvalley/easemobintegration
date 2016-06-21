@@ -65,6 +65,7 @@ public class Model {
         mAppContext = appContext;
 
         EMOptions options = new EMOptions();
+        options.setAutoAcceptGroupInvitation(false);
         options.setAcceptInvitationAlways(false);
 
         if(!EaseUI.getInstance().init(appContext, options)){
@@ -72,6 +73,7 @@ public class Model {
         }
 
         mContactSyncLiseners = new ArrayList<>();
+        groupChangeListeners = new ArrayList<>();
         mPreference = new PreferenceUtils(mAppContext);
         mIsContactSynced = mPreference.isContactSynced();
 
@@ -488,12 +490,17 @@ public class Model {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_INVITE);
             invitationInfo.setGroupInfo(groupInfo);
 
+            mDBManager.addInvitation(invitationInfo);
             mH.post(new Runnable() {
                 @Override
                 public void run() {
                     Toast.makeText(mAppContext,"收到邀请 : " + groupInfo,Toast.LENGTH_SHORT).show();
                 }
             });
+
+            for (EMGroupChangeListener listener:groupChangeListeners){
+                listener.onInvitationReceived(s,s1,s2,s3);
+            }
 
         }
 
@@ -510,6 +517,8 @@ public class Model {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_APPLICATION);
             invitationInfo.setGroupInfo(groupInfo);
 
+            mDBManager.addInvitation(invitationInfo);
+
             mH.post(new Runnable() {
                 @Override
                 public void run() {
@@ -517,6 +526,9 @@ public class Model {
                 }
             });
 
+            for (EMGroupChangeListener listener:groupChangeListeners){
+                listener.onApplicationReceived(s,s1,s2,s3);
+            }
         }
 
         @Override
@@ -530,6 +542,8 @@ public class Model {
 
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPTED);
+
+            mDBManager.addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
@@ -551,6 +565,10 @@ public class Model {
 
             // 保存同意消息
             EMClient.getInstance().chatManager().saveMessage(msg);
+
+            for (EMGroupChangeListener listener:groupChangeListeners){
+                listener.onApplicationAccept(s,s1,s2);
+            }
         }
 
         @Override
@@ -566,12 +584,18 @@ public class Model {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_DECLINED);
             invitationInfo.setGroupInfo(groupInfo);
 
+            mDBManager.addInvitation(invitationInfo);
+
             mH.post(new Runnable() {
                 @Override
                 public void run() {
                     Toast.makeText(mAppContext, "申请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
+
+            for(EMGroupChangeListener listener:groupChangeListeners){
+                listener.onApplicationDeclined(s,s1,s2,s3);
+            }
         }
 
         @Override
@@ -585,12 +609,19 @@ public class Model {
 
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
+
+            mDBManager.addInvitation(invitationInfo);
+
             mH.post(new Runnable() {
                 @Override
                 public void run() {
                     Toast.makeText(mAppContext, "邀请被接收 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
+
+            for (EMGroupChangeListener listener:groupChangeListeners){
+                listener.onInvitationAccpted(s,s1,s2);
+            }
         }
 
         @Override
@@ -605,12 +636,18 @@ public class Model {
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_DECLINED);
 
+            mDBManager.addInvitation(invitationInfo);
+
             mH.post(new Runnable() {
                 @Override
                 public void run() {
                     Toast.makeText(mAppContext, "邀请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
+
+            for (EMGroupChangeListener listener:groupChangeListeners){
+                listener.onInvitationDeclined(s,s1,s2);
+            }
         }
 
         @Override
@@ -634,6 +671,7 @@ public class Model {
 
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
+            mDBManager.addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
@@ -643,4 +681,29 @@ public class Model {
             });
         }
     };
+
+    public void acceptGroupInvitation(InvitationInfo invitationInfo){
+        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_ACCEPT_INVITE);
+
+        mDBManager.addInvitation(invitationInfo);
+    }
+
+    public void acceptGroupApplication(InvitationInfo invitationInfo){
+        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUPO_ACCEPT_APPLICATION);
+
+        mDBManager.addInvitation(invitationInfo);
+    }
+
+    public void rejectGroupInvitation(InvitationInfo invitationInfo){
+        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_REJECT_INVITE);
+
+        mDBManager.addInvitation(invitationInfo);
+    }
+
+    public void rejectGroupApplication(InvitationInfo invitationInfo){
+        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_REJECT_APPLICATION);
+
+        mDBManager.addInvitation(invitationInfo);
+
+    }
 }

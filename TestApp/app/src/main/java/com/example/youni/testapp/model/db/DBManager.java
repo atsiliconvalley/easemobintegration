@@ -178,6 +178,22 @@ public class DBManager {
             return InvitationStatus.GROUP_APPLICATION_DECLINED;
         }
 
+        if(intStatus == InvitationStatus.GROUP_ACCEPT_INVITE.ordinal()){
+            return InvitationStatus.GROUP_ACCEPT_INVITE;
+        }
+
+        if(intStatus == InvitationStatus.GROUPO_ACCEPT_APPLICATION.ordinal()){
+            return InvitationStatus.GROUPO_ACCEPT_APPLICATION;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_REJECT_APPLICATION.ordinal()){
+            return InvitationStatus.GROUP_REJECT_APPLICATION;
+        }
+
+        if(intStatus == InvitationStatus.GROUP_REJECT_INVITE.ordinal()){
+            return InvitationStatus.GROUP_REJECT_INVITE;
+        }
+
         return null;
     }
 

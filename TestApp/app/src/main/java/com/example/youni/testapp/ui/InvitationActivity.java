@@ -17,6 +17,7 @@ import com.example.youni.testapp.model.DemoUser;
 import com.example.youni.testapp.model.InvitationInfo;
 import com.example.youni.testapp.model.Model;
 import com.hyphenate.EMContactListener;
+import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.exceptions.HyphenateException;
 
@@ -30,13 +31,14 @@ public class InvitationActivity extends Activity implements OnInvitationListener
     private List<InvitationInfo> mInvitations;
     private MyAdapter mAdapter;
     private Handler mH = new Handler();
+    private Activity me;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_contact_invitation);
-
+        me = this;
         init();
     }
 
@@ -49,6 +51,7 @@ public class InvitationActivity extends Activity implements OnInvitationListener
         lv.setAdapter(mAdapter);
 
         Model.getInstance().addContactListeners(contactListener);
+        Model.getInstance().addGroupChangeListener(groupChangeListener);
 
         setupInvitations();
     }
@@ -58,6 +61,7 @@ public class InvitationActivity extends Activity implements OnInvitationListener
         super.onDestroy();
 
         Model.getInstance().removeContactListener(contactListener);
+        Model.getInstance().removeGroupChangeListener(groupChangeListener);
     }
 
     void setupInvitations(){
@@ -119,15 +123,30 @@ public class InvitationActivity extends Activity implements OnInvitationListener
         }).start();
     }
 
+    private void showMessage(final String message){
+        mH.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(me,message,Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     @Override
     public void onGroupApplicationAccept(final InvitationInfo invitationInfo) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().groupManager().acceptApplication(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser());
+                    EMClient.getInstance().groupManager().acceptApplication(invitationInfo.getGroupInfo().getGroupId(), invitationInfo.getGroupInfo().getInviteTriggerUser());
+                    Model.getInstance().acceptGroupApplication(invitationInfo);
+                    mAdapter.refresh(Model.getInstance().getInvitationInfo());
+
+                    showMessage("接受申请成功");
                 } catch (HyphenateException e) {
                     e.printStackTrace();
+
+                    showMessage("群申请失败 : " + e.toString());
                 }
             }
         }).start();
@@ -140,8 +159,14 @@ public class InvitationActivity extends Activity implements OnInvitationListener
             public void run() {
                 try {
                     EMClient.getInstance().groupManager().acceptInvitation(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser());
+                    Model.getInstance().acceptGroupInvitation(invitationInfo);
+                    mAdapter.refresh(Model.getInstance().getInvitationInfo());
+
+                    showMessage("接收邀请成功");
                 } catch (HyphenateException e) {
                     e.printStackTrace();
+
+                    showMessage("接收邀请失败 : " + e.toString());
                 }
             }
         }).start();
@@ -154,8 +179,14 @@ public class InvitationActivity extends Activity implements OnInvitationListener
             public void run() {
                 try {
                     EMClient.getInstance().groupManager().declineApplication(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser(),"拒绝你的申请");
+                    Model.getInstance().rejectGroupApplication(invitationInfo);
+                    mAdapter.refresh(Model.getInstance().getInvitationInfo());
+
+                    showMessage("拒绝申请成功");
                 } catch (HyphenateException e) {
                     e.printStackTrace();
+
+                    showMessage("拒绝申请失败 ：" + e.toString());
                 }
             }
         }).start();
@@ -168,8 +199,14 @@ public class InvitationActivity extends Activity implements OnInvitationListener
             public void run() {
                 try {
                     EMClient.getInstance().groupManager().declineInvitation(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser(),"拒绝加入");
+                    Model.getInstance().rejectGroupInvitation(invitationInfo);
+                    mAdapter.refresh(Model.getInstance().getInvitationInfo());
+
+                    showMessage("拒绝邀请成功");
                 } catch (HyphenateException e) {
                     e.printStackTrace();
+
+                    showMessage("拒绝邀请失败 : " +e.toString());
                 }
             }
         }).start();
@@ -202,6 +239,53 @@ public class InvitationActivity extends Activity implements OnInvitationListener
 
         }
     }
+
+    EMGroupChangeListener groupChangeListener = new EMGroupChangeListener() {
+        @Override
+        public void onInvitationReceived(String s, String s1, String s2, String s3) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onApplicationReceived(String s, String s1, String s2, String s3) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onApplicationAccept(String s, String s1, String s2) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onApplicationDeclined(String s, String s1, String s2, String s3) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onInvitationAccpted(String s, String s1, String s2) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onInvitationDeclined(String s, String s1, String s2) {
+            mAdapter.refresh(Model.getInstance().getInvitationInfo());
+        }
+
+        @Override
+        public void onUserRemoved(String s, String s1) {
+
+        }
+
+        @Override
+        public void onGroupDestroy(String s, String s1) {
+
+        }
+
+        @Override
+        public void onAutoAcceptInvitationFromGroup(String s, String s1, String s2) {
+
+        }
+    };
 
     EMContactListener contactListener = new MyContactListener();
 }
@@ -388,15 +472,19 @@ class MyAdapter extends BaseAdapter{
     }
 
     public void refresh(final List<InvitationInfo> inviteInfos){
-        mH.post(new Runnable() {
-            @Override
-            public void run() {
-                MyAdapter.this.inviteInfos.clear();
-                MyAdapter.this.inviteInfos.addAll(inviteInfos);
-                notifyDataSetChanged();
-            }
-        });
+
+        mH.removeCallbacks(refreshRunnable);
+        mH.post(refreshRunnable);
     }
+
+    Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            MyAdapter.this.inviteInfos.clear();
+            MyAdapter.this.inviteInfos.addAll(inviteInfos);
+            notifyDataSetChanged();
+        }
+    };
 
     static class ViewHolder{
         TextView name;
