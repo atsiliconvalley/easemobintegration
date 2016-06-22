@@ -224,4 +224,9 @@ public class GlobalEventNotifer {
         lbm.sendBroadcast(new Intent(Constant.CONTACT_INVITATION_CHANGED));
     }
 
+    private void broadCastContactChanged(){
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+
+        lbm.sendBroadcast(new Intent(Constant.CONTACT_CHANGED));
+    }
 }

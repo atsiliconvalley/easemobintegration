@@ -50,8 +50,10 @@ public class ContactListFragment extends EaseContactListFragment {
 
     @Override
     public void setUpView(){
-        super.setUpView();
         View headerView = LayoutInflater.from(getContext()).inflate(R.layout.activity_contact_header,null);
+        listView.addHeaderView(headerView);
+
+        super.setUpView();
         notifImageView = (ImageView) headerView.findViewById(R.id.iv_invitation_notif);
 
 
@@ -75,7 +77,6 @@ public class ContactListFragment extends EaseContactListFragment {
 
         notifImageView.setVisibility(Model.getInstance().hasInviteNotif() ? View.VISIBLE : View.INVISIBLE);
 
-        listView.addHeaderView(headerView);
         registerForContextMenu(listView);
 
         titleBar.setRightImageResource(R.drawable.em_add);

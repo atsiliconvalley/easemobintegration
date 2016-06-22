@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.common.Constant;
 import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
@@ -60,7 +61,8 @@ public class GroupPickContactsActivity extends Activity {
         setContentView(R.layout.activity_group_pick_contacts);
 
         // String groupName = getIntent().getStringExtra("groupName");
-        String groupId = getIntent().getStringExtra("groupId");
+        String groupId = getIntent().getStringExtra(Constant.GROUP_ID);
+
         if (groupId == null) {// 创建群组
             isCreatingNewGroup = true;
         } else {
