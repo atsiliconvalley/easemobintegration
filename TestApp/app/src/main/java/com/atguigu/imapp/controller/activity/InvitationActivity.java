@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -42,6 +44,8 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
 
     void init(){
         mAdapter = new MyInvitationAdapter(this,this,null);
+        LocalBroadcastManager.getInstance(this).registerReceiver(invitationChangedReceiver,new IntentFilter(Constant.CONTACT_INVITATION_CHANGED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(invitationChangedReceiver,new IntentFilter(Constant.GROUP_INVITATION_MESSAGE_CHANGED));
 
         ListView lv = (ListView) findViewById(R.id.lv_invitation_list);
 
@@ -53,6 +57,8 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(invitationChangedReceiver);
     }
 
     void setupInvitations(){
@@ -202,7 +208,7 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
         }).start();
     }
 
-    private BroadcastReceiver invitationChangedReceived = new BroadcastReceiver() {
+    private BroadcastReceiver invitationChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()){
