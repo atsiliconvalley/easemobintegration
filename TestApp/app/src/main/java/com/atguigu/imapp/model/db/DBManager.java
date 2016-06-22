@@ -212,7 +212,7 @@ public class DBManager {
             values.put(InvitationMessageTable.COL_HXID,invitationInfo.getUser().getHxId());
             values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getUser().getNick());
         }else{
-            values.put(InvitationMessageTable.COL_HXID,invitationInfo.getGroupInfo().getGroupId());
+            values.put(InvitationMessageTable.COL_HXID,invitationInfo.getGroupInfo().getInviteTriggerUser());
             values.put(InvitationMessageTable.COL_GROUP_ID,invitationInfo.getGroupInfo().getGroupId());
             values.put(InvitationMessageTable.COL_GROUP_NAME,invitationInfo.getGroupInfo().getGroupName());
             values.put(InvitationMessageTable.COL_USERNAME,invitationInfo.getGroupInfo().getInviteTriggerUser());
