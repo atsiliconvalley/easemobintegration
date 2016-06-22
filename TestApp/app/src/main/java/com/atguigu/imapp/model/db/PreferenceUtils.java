@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 public class PreferenceUtils {
     private static final String PREFERENCE_NAME = "atguigu";
     private static final String CONTACT_SYNCED = "contact_synced";
+    private static final String CURRENT_USER = "current_user";
     private Context mContext;
     private SharedPreferences mPreference;
 
@@ -25,5 +26,13 @@ public class PreferenceUtils {
 
     public boolean isContactSynced(){
         return mPreference.getBoolean(CONTACT_SYNCED,false);
+    }
+
+    public void setCurrentUser(String currentUser){
+        mPreference.edit().putString(CURRENT_USER,currentUser);
+    }
+
+    public String getCurrentUser(){
+        return mPreference.getString(CURRENT_USER,null);
     }
 }

@@ -220,7 +220,7 @@ public class DBManager {
 
         long rt = db.replace(InvitationMessageTable.TABLE_NAME, null, values);
 
-        Log.d(TAG, "reslult : " + rt + " content values : " + values.toString());
+        Log.d(TAG, db.getPath() + " : reslult : " + rt + " content values : " + values.toString());
     }
 
     public void removeInvitation(String hxId){

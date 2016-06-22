@@ -233,6 +233,8 @@ public class Model {
             return;
         }
 
+        Log.d(TAG,"logined user name : " + userName);
+
         mCurrentUser = userName;
         mDBManager = new DBManager(mAppContext,mCurrentUser);
         eventListener.setDbManager(mDBManager);
