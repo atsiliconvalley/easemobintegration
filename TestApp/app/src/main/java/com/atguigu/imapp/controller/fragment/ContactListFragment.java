@@ -1,7 +1,11 @@
 package com.atguigu.imapp.controller.fragment;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -13,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.common.Constant;
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.event.OnSyncListener;
 import com.atguigu.imapp.model.DemoUser;
@@ -22,6 +27,7 @@ import com.atguigu.imapp.controller.activity.ChatActivity;
 import com.atguigu.imapp.controller.activity.InvitationActivity;
 import com.atguigu.imapp.controller.activity.GroupListActivity;
 import com.hyphenate.EMContactListener;
+import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;
 import com.hyphenate.easeui.domain.EaseUser;
@@ -100,7 +106,9 @@ public class ContactListFragment extends EaseContactListFragment {
             setupContacts();
         }
 
-        GlobalEventNotifer.getInstance().addContactListeners(mContactListener);
+        // 注册本地通知事件
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(invitaionChangedReceiver,new IntentFilter(Constant.CONTACT_INVITATION_CHANGED));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(invitaionChangedReceiver,new IntentFilter(Constant.GROUP_INVITATION_MESSAGE_CHANGED));
     }
 
     public void setupContacts(){
@@ -133,37 +141,6 @@ public class ContactListFragment extends EaseContactListFragment {
             }
         });
     }
-
-    private EMContactListener mContactListener = new EMContactListener() {
-        @Override
-        public void onContactAdded(String s) {
-
-        }
-
-        @Override
-        public void onContactDeleted(String s) {
-            setupContacts();
-        }
-
-        @Override
-        public void onContactInvited(String s, String s1) {
-            ContactListFragment.this.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    notifImageView.setVisibility(View.VISIBLE);
-                }
-            });
-        }
-
-        @Override
-        public void onContactAgreed(String s) {
-
-        }
-
-        @Override
-        public void onContactRefused(String s) {
-        }
-    };
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -214,9 +191,17 @@ public class ContactListFragment extends EaseContactListFragment {
             }
         }).start();
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        GlobalEventNotifer.getInstance().removeContactListener(mContactListener);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(invitaionChangedReceiver);
     }
+
+    private BroadcastReceiver invitaionChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            notifImageView.setVisibility(View.VISIBLE);
+        }
+    };
 }

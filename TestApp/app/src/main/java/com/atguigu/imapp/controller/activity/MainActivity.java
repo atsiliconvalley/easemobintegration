@@ -1,14 +1,20 @@
 package com.atguigu.imapp.controller.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.common.Constant;
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.event.OnSyncListener;
 import com.atguigu.imapp.model.Model;
@@ -28,9 +34,7 @@ public class MainActivity extends FragmentActivity {
     Fragment mSetttingsFragment;
     ConversationListFragment mConversationListFragment;
     ContactListFragment mContactListFragment;
-    OnSyncListener mContactSyncListener;
     int currentId;
-    EMContactListener mContactListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,59 +107,9 @@ public class MainActivity extends FragmentActivity {
     }
 
     void initListener(){
-        mContactListener = new EMContactListener() {
-            @Override
-            public void onContactAdded(String s) {
-//                DemoUser user = new DemoUser();
-//
-//                user.hxId = s;
-//
-//                Model.getInstance().addUser(user);
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
 
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mContactListFragment.setupContacts();
-                    }
-                });
-            }
-
-            @Override
-            public void onContactDeleted(String s) {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mContactListFragment.setupContacts();
-                    }
-                });
-            }
-
-            @Override
-            public void onContactInvited(String s, String s1) {
-//                try {
-//                    EMClient.getInstance().contactManager().acceptInvitation(s);
-//                } catch (HyphenateException e) {
-//                    e.printStackTrace();
-//                }
-            }
-
-            @Override
-            public void onContactAgreed(final String s) {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this,s + "同意了您的好友请求",Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-
-            @Override
-            public void onContactRefused(String s) {
-
-            }
-        };
-
-        GlobalEventNotifer.getInstance().addContactListeners(mContactListener);
+        lbm.registerReceiver(contactChangedReceiver, new IntentFilter(Constant.CONTACT_CHANGED));
     }
 
     @Override
@@ -169,9 +123,8 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
 
         EMClient.getInstance().chatManager().removeMessageListener(messageListener);
-        if(mContactListener != null){
-            GlobalEventNotifer.getInstance().removeContactListener(mContactListener);
-        }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(contactChangedReceiver);
+
     }
 
     private EMMessageListener messageListener = new EMMessageListener() {
@@ -199,6 +152,13 @@ public class MainActivity extends FragmentActivity {
         @Override
         public void onMessageChanged(EMMessage emMessage, Object o) {
 
+        }
+    };
+
+    BroadcastReceiver contactChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mContactListFragment.setupContacts();
         }
     };
 }

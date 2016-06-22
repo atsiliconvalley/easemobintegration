@@ -17,4 +17,7 @@ public class Constant {
 
     // contact invitation message changed
     public static final String CONTACT_INVITATION_CHANGED = "contact_invitation_message_changed_action";
+
+    // contact changed
+    public static final String CONTACT_CHANGED = "contact_changed_action";
 }
