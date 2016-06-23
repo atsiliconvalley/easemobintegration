@@ -130,7 +130,7 @@ public class Model {
      * 3. 等到这两个都返回时做两者的同步
      */
     public void asyncfetchUsers() {
-        new Thread(new Runnable() {
+        globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 mIsContactSynced = false;
@@ -157,17 +157,17 @@ public class Model {
 
                 // 最后要更新本地数据库
 
-                appUsers = syncWithHxUsers(hxUsers,appUsers);
+                appUsers = syncWithHxUsers(hxUsers, appUsers);
 
-                for(IMUser user:appUsers){
-                    mContacts.put(user.getAppUser(),user);
+                for (IMUser user : appUsers) {
+                    mContacts.put(user.getAppUser(), user);
                 }
 
                 mDBManager.saveContacts(mContacts.values());
 
                 GlobalEventNotifer.getInstance().notifyContactSyncChanged(true);
             }
-        }).start();
+        });
     }
 
     public void asyncFetchGroups(){

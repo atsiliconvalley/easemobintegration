@@ -163,7 +163,7 @@ public class ContactListFragment extends EaseContactListFragment {
     private void deleteContact(final String hxId){
         final ProgressDialog pd = new ProgressDialog(getActivity());
         pd.show();
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -188,7 +188,7 @@ public class ContactListFragment extends EaseContactListFragment {
                     });
                 }
             }
-        }).start();
+        });
     }
 
     @Override
