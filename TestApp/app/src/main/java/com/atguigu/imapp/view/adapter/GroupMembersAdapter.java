@@ -118,7 +118,7 @@ public class GroupMembersAdapter extends BaseAdapter{
                 @Override
                 public void onClick(View v) {
                     if(deleteModel){
-                        groupMembersListener.onDeleteMember(getItem(position).getHxId());
+                        groupMembersListener.onDeleteMember(getItem(position));
                     }
                 }
             });
@@ -182,6 +182,6 @@ public class GroupMembersAdapter extends BaseAdapter{
 
     public interface OnGroupMembersListener{
         void onAddMember();
-        void onDeleteMember(String member);
+        void onDeleteMember(IMUser member);
     }
 }

@@ -165,8 +165,21 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
     }
 
     @Override
-    public void onDeleteMember(String member) {
+    public void onDeleteMember(final IMUser user) {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    EMClient.getInstance().groupManager().removeUserFromGroup(group.getGroupId(),user.getHxId());
+                    showMessage("移除成功!");
+                    asyncLoadLocalGroup();
+                } catch (HyphenateException e) {
+                    e.printStackTrace();
 
+                    showMessage("移除失败 : " + e.toString());
+                }
+            }
+        });
     }
 
     @Override
@@ -180,21 +193,23 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                 Model.getInstance().globalThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
-                        if(group.getOwner().equals(EMClient.getInstance().getCurrentUser())){
+                        if (group.getOwner().equals(EMClient.getInstance().getCurrentUser())) {
                             try {
                                 EMClient.getInstance().groupManager().addUsersToGroup(group.getGroupId(), members);
                                 asyncFetchAndUpdateGroup();
+                                showMessage("邀请已发");
                             } catch (HyphenateException e) {
                                 e.printStackTrace();
 
                                 showMessage("邀请失败" + e.toString());
                             }
-                        }else{
+                        } else {
                             try {
-                                if(group.isAllowInvites()){
-                                    EMClient.getInstance().groupManager().inviteUser(group.getGroupId(),members,"invite you to join the group");
+                                if (group.isAllowInvites()) {
+                                    EMClient.getInstance().groupManager().inviteUser(group.getGroupId(), members, "invite you to join the group");
                                     asyncFetchAndUpdateGroup();
-                                }else{
+                                    showMessage("邀请已发");
+                                } else {
                                     showMessage("没有权限");
                                 }
                             } catch (HyphenateException e) {
