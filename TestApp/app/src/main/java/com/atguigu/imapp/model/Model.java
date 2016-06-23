@@ -464,4 +464,8 @@ public class Model {
 
         return users;
     }
+
+    public  IMUser fetchUserFromServer(String appUser){
+        return new IMUser(appUser);
+    }
 }
