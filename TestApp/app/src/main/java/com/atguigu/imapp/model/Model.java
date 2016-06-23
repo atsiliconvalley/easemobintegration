@@ -11,6 +11,7 @@ import com.atguigu.imapp.controller.activity.MainActivity;
 import com.atguigu.imapp.model.db.UserAccountDB;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
+import com.hyphenate.chat.EMGroup;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMOptions;
 import com.hyphenate.easeui.controller.EaseUI;
@@ -177,49 +178,18 @@ public class Model {
                 try {
                     EMClient.getInstance().groupManager().getJoinedGroupsFromServer();
                     mPreference.setGroupSynced(true);
+                    isGroupSynced = true;
                 } catch (HyphenateException e) {
                     e.printStackTrace();
                 }
+
+                // 取完群后要和app服务器做同步
+                // 同步相关的群信息，例如群头像,和app自己定义的群的属性，然后将他们存到本地数据库
+
+                //
+                fetchGroupsFromAppServer(EMClient.getInstance().groupManager().getAllGroups());
             }
         });
-    }
-
-    private List<IMUser> syncWithHxUsers(List<String> hxUsers, List<IMUser> appUsers){
-        List<IMUser> syncedUsers = new ArrayList<>();
-
-        for(String hxId:hxUsers){
-            IMUser appUser = new IMUser(hxId);
-
-            syncedUsers.add(appUser);
-        }
-
-        return syncedUsers;
-    }
-
-    IMUser getUserByHx(String hxId){
-        for(IMUser user:mContacts.values()){
-            if(user.getHxId().equals(hxId)){
-                return user;
-            }
-        }
-
-        return null;
-    }
-
-    private static String[] NICKS = new String[]{"老虎","熊猫","猴子","猎豹","灰熊","企鹅"};
-
-    private List<IMUser> fetchUsersFromAppServer() {
-       // 实际上是应该从APP服务器上获取联系人的信息
-
-        // 不过由于缺乏我们的demo的服务器，暂时hick下，用下假数据
-        //
-
-        int index = 0;
-        for(IMUser user:mContacts.values()){
-            user.setNick(user.getHxId() + "_" + NICKS[index % NICKS.length]);
-            index++;
-        }
-        return null;
     }
 
     /**
@@ -359,6 +329,53 @@ public class Model {
 
     }
 
+    public void addAccount(IMUser account){
+        userAccountDB.addAccount(account);
+    }
+
+    public IMUser getAccount(String appUser){
+        return userAccountDB.getAccount(appUser);
+    }
+
+    public IMUser getAccountFromServer(String appUser) throws Exception{
+        return new IMUser(appUser);
+    }
+
+    public IMUser getAccountByHxId(String hxId){
+        return userAccountDB.getAccountByHxId(hxId);
+    }
+
+    public IMUser createAppAccountFromAppServer(String appUser) throws Exception{
+
+        //试图去创建一个APP 用户
+        //如果成功就返回IMUser，如果不成功就抛异常
+        return new IMUser(appUser);
+    }
+
+    public ExecutorService globalThreadPool(){
+        return executorService;
+    }
+
+    public void saveNonFriends(Collection<IMUser> contacts){
+        mDBManager.saveNonFriends(contacts);
+    }
+
+    public List<IMUser> getContactsByHx(List<String> hxIds){
+        return mDBManager.getContactsByHx(hxIds);
+    }
+
+    public List<IMUser> fetchUsersFromServer(List<String> members){
+        List<IMUser> users = new ArrayList<>();
+
+        for(String id:members){
+            users.add(new IMUser(id));
+        }
+
+        saveNonFriends(users);
+
+        return users;
+    }
+
     //==============================================================
     // please put private api here
     //==============================================================
@@ -418,50 +435,45 @@ public class Model {
         });
     }
 
-    public void addAccount(IMUser account){
-        userAccountDB.addAccount(account);
+    private void fetchGroupsFromAppServer(List<EMGroup> allGroups) {
+        //同步服务器群信息,到本地
     }
 
-    public IMUser getAccount(String appUser){
-        return userAccountDB.getAccount(appUser);
-    }
+    private List<IMUser> syncWithHxUsers(List<String> hxUsers, List<IMUser> appUsers){
+        List<IMUser> syncedUsers = new ArrayList<>();
 
-    public IMUser getAccountFromServer(String appUser) throws Exception{
-        return new IMUser(appUser);
-    }
+        for(String hxId:hxUsers){
+            IMUser appUser = new IMUser(hxId);
 
-    public IMUser getAccountByHxId(String hxId){
-        return userAccountDB.getAccountByHxId(hxId);
-    }
-
-    public IMUser createAppAccountFromAppServer(String appUser) throws Exception{
-
-        //试图去创建一个APP 用户
-        //如果成功就返回IMUser，如果不成功就抛异常
-        return new IMUser(appUser);
-    }
-
-    public ExecutorService globalThreadPool(){
-        return executorService;
-    }
-
-    public void saveNonFriends(Collection<IMUser> contacts){
-        mDBManager.saveNonFriends(contacts);
-    }
-
-    public List<IMUser> getContactsByHx(List<String> hxIds){
-        return mDBManager.getContactsByHx(hxIds);
-    }
-
-    public List<IMUser> fetchUsersFromServer(List<String> members){
-        List<IMUser> users = new ArrayList<>();
-
-        for(String id:members){
-            users.add(new IMUser(id));
+            syncedUsers.add(appUser);
         }
 
-        saveNonFriends(users);
+        return syncedUsers;
+    }
 
-        return users;
+    private IMUser getUserByHx(String hxId){
+        for(IMUser user:mContacts.values()){
+            if(user.getHxId().equals(hxId)){
+                return user;
+            }
+        }
+
+        return null;
+    }
+
+    private static String[] NICKS = new String[]{"老虎","熊猫","猴子","猎豹","灰熊","企鹅"};
+
+    private List<IMUser> fetchUsersFromAppServer() {
+        // 实际上是应该从APP服务器上获取联系人的信息
+
+        // 不过由于缺乏我们的demo的服务器，暂时hick下，用下假数据
+        //
+
+        int index = 0;
+        for(IMUser user:mContacts.values()){
+            user.setNick(user.getHxId() + "_" + NICKS[index % NICKS.length]);
+            index++;
+        }
+        return null;
     }
 }
