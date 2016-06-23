@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.atguigu.imapp.R;
-import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.InvitationInfo;
 
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class MyInvitationAdapter extends BaseAdapter {
 
         final InvitationInfo inviteInfo = inviteInfos.get(position);
 
-        final DemoUser user  = inviteInfos.get(position).getUser();
+        final IMUser user  = inviteInfos.get(position).getUser();
 
         boolean isGroupInvite = (user == null);
         if(convertView == null){

@@ -20,7 +20,7 @@ import java.util.List;
 
 import com.atguigu.imapp.R;
 import com.atguigu.imapp.common.Constant;
-import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
@@ -76,13 +76,13 @@ public class GroupPickContactsActivity extends Activity {
         final List<EaseUser> alluserList = new ArrayList<EaseUser>();
 
 
-        for (DemoUser demoUser : Model.getInstance().getContacts().values()) {
-            EaseUser user = new EaseUser(demoUser.getHxId());
-            user.setAvatar(demoUser.getAvatarPhoto());
-            user.setNick(demoUser.getNick());
+        for (IMUser user : Model.getInstance().getContacts().values()) {
+            EaseUser easeUser = new EaseUser(user.getHxId());
+            easeUser.setAvatar(user.getAvartar());
+            easeUser.setNick(user.getNick());
 
-            EaseCommonUtils.setUserInitialLetter(user);
-            alluserList.add(user);
+            EaseCommonUtils.setUserInitialLetter(easeUser);
+            alluserList.add(easeUser);
         }
 
         // 对list进行排序

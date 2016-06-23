@@ -20,14 +20,12 @@ import com.atguigu.imapp.R;
 import com.atguigu.imapp.common.Constant;
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.event.OnSyncListener;
-import com.atguigu.imapp.model.DemoUser;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.controller.activity.AddFriendActivity;
 import com.atguigu.imapp.controller.activity.ChatActivity;
 import com.atguigu.imapp.controller.activity.InvitationActivity;
 import com.atguigu.imapp.controller.activity.GroupListActivity;
-import com.hyphenate.EMContactListener;
-import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;
 import com.hyphenate.easeui.domain.EaseUser;
@@ -115,10 +113,10 @@ public class ContactListFragment extends EaseContactListFragment {
     public void setupContacts(){
         Map<String,EaseUser> easeUsers = new HashMap<>();
 
-        Map<String,DemoUser> appUsers = Model.getInstance().getContacts();
+        Map<String,IMUser> appUsers = Model.getInstance().getContacts();
 
         if(appUsers != null){
-            for(DemoUser user:appUsers.values()){
+            for(IMUser user:appUsers.values()){
                 EaseUser easeUser = new EaseUser(user.getHxId());
                 easeUser.setNick(user.getNick());
 

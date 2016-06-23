@@ -4,7 +4,7 @@ package com.atguigu.imapp.model;
  * Created by youni on 2016/5/25.
  */
 public class InvitationInfo {
-    private DemoUser user;
+    private IMUser user;
     private IMInvitationGroupInfo groupInfo;
 
     private String reason;
@@ -14,11 +14,11 @@ public class InvitationInfo {
     public InvitationInfo(){
     }
 
-    public DemoUser getUser() {
+    public IMUser getUser() {
         return user;
     }
 
-    public void setUser(DemoUser user) {
+    public void setUser(IMUser user) {
         this.user = user;
     }
 
@@ -29,7 +29,7 @@ public class InvitationInfo {
     public void setReason(String reason) {
         this.reason = reason;
     }
-    public InvitationInfo(String reason, DemoUser user){
+    public InvitationInfo(String reason, IMUser user){
         this.user = user;
         this.reason = reason;
     }

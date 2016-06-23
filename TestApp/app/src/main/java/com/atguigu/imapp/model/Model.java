@@ -8,6 +8,7 @@ import android.util.Log;
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.model.db.PreferenceUtils;
 import com.atguigu.imapp.controller.activity.MainActivity;
+import com.atguigu.imapp.model.db.UserAccountDB;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
@@ -19,6 +20,7 @@ import com.hyphenate.exceptions.HyphenateException;
 import com.atguigu.imapp.model.db.DBManager;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +32,14 @@ import java.util.Map;
  *
  */
 public class Model {
-    private final static String TAG = "Demo Model";
+    private final static String TAG = "IM Model";
     private boolean isInited = false;
     private Context mAppContext;
     private static Model me = new Model();
-    private Map<String,DemoUser> mContacts = new HashMap<>();
+    private Map<String,IMUser> mContacts = new HashMap<>();
     private String mCurrentUser;
     private DBManager mDBManager;
+    private UserAccountDB userAccountDB;
     private PreferenceUtils mPreference;
     private boolean mIsContactSynced = false;
     private EventListener eventListener;
@@ -69,6 +72,9 @@ public class Model {
 
         // 2. 创建Model Eevent listener
         eventListener = new EventListener(appContext);
+
+
+        userAccountDB = new UserAccountDB(appContext);
 
         mPreference = new PreferenceUtils(mAppContext);
         mIsContactSynced = mPreference.isContactSynced();
@@ -114,9 +120,9 @@ public class Model {
             public void run() {
                 mIsContactSynced = false;
 
-                List<String> users = null;
+                List<String> hxUsers = null;
                 try {
-                    users = EMClient.getInstance().contactManager().getAllContactsFromServer();
+                    hxUsers = EMClient.getInstance().contactManager().getAllContactsFromServer();
                     mIsContactSynced = true;
                     mPreference.setContactSynced(true);
                 } catch (HyphenateException e) {
@@ -126,23 +132,21 @@ public class Model {
                     return;
                 }
 
-                if(users != null){
-                    for(String id:users){
-                        DemoUser appUser = new DemoUser();
-                        appUser.setHxId(id);
-                        appUser.setNick(null);
-                        mContacts.put(id, appUser);
-                    }
-                }
                 // fetch users from app server
 
-                List<DemoUser> appUsers = fetchUsersFromAppServer();
+                List<IMUser> appUsers = fetchUsersFromAppServer();
 
                 // 同步联系人
                 // 以环信的联系人为主，如果环信的联系人里没有app里的联系，就把app里的联系人删除
                 // 如果app里的联系人没有环信的联系人，则加入到app里
 
                 // 最后要更新本地数据库
+
+                appUsers = syncWithHxUsers(hxUsers,appUsers);
+
+                for(IMUser user:appUsers){
+                    mContacts.put(user.getAppUser(),user);
+                }
 
                 mDBManager.saveContacts(mContacts.values());
 
@@ -151,16 +155,38 @@ public class Model {
         }).start();
     }
 
+    private List<IMUser> syncWithHxUsers(List<String> hxUsers, List<IMUser> appUsers){
+        List<IMUser> syncedUsers = new ArrayList<>();
+
+        for(String hxId:hxUsers){
+            IMUser appUser = new IMUser(hxId);
+
+            syncedUsers.add(appUser);
+        }
+
+        return syncedUsers;
+    }
+
+    IMUser getUserByHx(String hxId){
+        for(IMUser user:mContacts.values()){
+            if(user.getHxId().equals(hxId)){
+                return user;
+            }
+        }
+
+        return null;
+    }
+
     private static String[] NICKS = new String[]{"老虎","熊猫","猴子","猎豹","灰熊","企鹅"};
 
-    private List<DemoUser> fetchUsersFromAppServer() {
+    private List<IMUser> fetchUsersFromAppServer() {
        // 实际上是应该从APP服务器上获取联系人的信息
 
         // 不过由于缺乏我们的demo的服务器，暂时hick下，用下假数据
         //
 
         int index = 0;
-        for(DemoUser user:mContacts.values()){
+        for(IMUser user:mContacts.values()){
             user.setNick(user.getHxId() + "_" + NICKS[index % NICKS.length]);
             index++;
         }
@@ -172,23 +198,23 @@ public class Model {
      */
     public void loadLocalContacts(){
         Log.d("Model", "load local contacts");
-        List<DemoUser> users = mDBManager.getContacts();
+        List<IMUser> users = mDBManager.getContacts();
 
         if(users != null){
             mContacts.clear();
 
-            for(DemoUser user:users){
+            for(IMUser user:users){
                 mContacts.put(user.getHxId(),user);
             }
         }
     }
 
-    public void addUser(DemoUser user){
-        if(mContacts.containsKey(user.getHxId())){
+    public void addUser(IMUser user){
+        if(mContacts.containsKey(user.getAppUser())){
             return;
         }
 
-        mContacts.put(user.getHxId(), user);
+        mContacts.put(user.getAppUser(), user);
 
         // 记住应该还要去自己的APP服务器上去获取联系人信息
         fetchUserFromAppServer(user);
@@ -197,17 +223,17 @@ public class Model {
         mDBManager.saveContact(user);
     }
 
-    public void deleteContact(String hxId){
-        if(mContacts.get(hxId) == null){
+    public void deleteContact(String appUser){
+        if(mContacts.get(appUser) == null){
             return;
         }
 
-        mContacts.remove(hxId);
-        mDBManager.deleteContact(new DemoUser(hxId));
-        mDBManager.removeInvitation(hxId);
+        mContacts.remove(appUser);
+        mDBManager.deleteContact(new IMUser(appUser));
+        mDBManager.removeInvitation(appUser);
     }
 
-    public Map<String,DemoUser> getContacts(){
+    public Map<String,IMUser> getContacts(){
         return mContacts;
     }
 
@@ -224,7 +250,7 @@ public class Model {
      * and when fecting is done, update the cache and the db
      * @param user
      */
-    private void fetchUserFromAppServer(DemoUser user) {
+    private void fetchUserFromAppServer(IMUser user) {
         user.setNick(user.getHxId() + "_凤凰");
     }
 
@@ -249,7 +275,7 @@ public class Model {
     }
 
     public void updateInvitation(InvitationInfo.InvitationStatus status,String hxId){
-        mDBManager.updateInvitationStatus(status,hxId);
+        mDBManager.updateInvitationStatus(status, hxId);
     }
 
     public void updateInviteNotif(boolean hasNotify){
@@ -294,7 +320,7 @@ public class Model {
             public String getDisplayedText(EMMessage message) {
                 String hxId = message.getFrom();
 
-                DemoUser user = mContacts.get(hxId);
+                IMUser user = getUserByHx(hxId);
 
                 if (user != null) {
                     return user.getNick() + "发来一条消息";
@@ -328,7 +354,7 @@ public class Model {
         EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
             @Override
             public EaseUser getUser(String username) {
-                DemoUser user = mContacts.get(username);
+                IMUser user = getUserByHx(username);
 
                 if (user != null) {
                     EaseUser easeUser = new EaseUser(username);
@@ -342,5 +368,17 @@ public class Model {
                 return null;
             }
         });
+    }
+
+    public void addAccount(IMUser account){
+        userAccountDB.addAccount(account);
+    }
+
+    public IMUser getAccount(String appUser){
+        return userAccountDB.getAccount(appUser);
+    }
+
+    public IMUser getAccountByHxId(String hxId){
+        return userAccountDB.getAccountByHxId(hxId);
     }
 }

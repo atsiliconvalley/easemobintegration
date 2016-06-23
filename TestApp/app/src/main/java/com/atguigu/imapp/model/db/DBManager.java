@@ -7,8 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.atguigu.imapp.model.DemoUser;
 import com.atguigu.imapp.model.IMInvitationGroupInfo;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.InvitationInfo;
 import com.atguigu.imapp.model.InvitationInfo.InvitationStatus;
 
@@ -32,7 +32,7 @@ public class DBManager {
         mHelper = new DBHelper(context,dbName);
     }
 
-    public boolean saveContacts(Collection<DemoUser> contacts){
+    public boolean saveContacts(Collection<IMUser> contacts){
         if(contacts== null ||contacts.isEmpty()){
             return false;
         }
@@ -42,13 +42,14 @@ public class DBManager {
         SQLiteDatabase db = mHelper.getWritableDatabase();
         db.beginTransaction();
 
-        for(DemoUser user:contacts){
+        for(IMUser user:contacts){
             ContentValues values = new ContentValues();
 
-            values.put(UserTable.COL_USERNAME,user.getNick());
+            values.put(UserTable.COL_USERNAME,user.getAppUser());
+            values.put(UserTable.COL_NICK,user.getNick());
             values.put(UserTable.COL_HXID,user.getHxId());
             values.put(UserTable.COL_MYCONTACT,1);
-            values.put(UserTable.COL_AVATAR,user.getAvatarPhoto());
+            values.put(UserTable.COL_AVATAR,user.getAvartar());
 
             db.replace(UserTable.TABLE_NAME,null,values);
         }
@@ -59,20 +60,21 @@ public class DBManager {
         return true;
     }
 
-    public List<DemoUser> getContacts(){
+    public List<IMUser> getContacts(){
         checkAvailability();
 
-        List<DemoUser> users = new ArrayList<>();
+        List<IMUser> users = new ArrayList<>();
 
         SQLiteDatabase db = mHelper.getReadableDatabase();
 
         Cursor cursor = db.rawQuery("SELECT * from " + UserTable.TABLE_NAME + " where " + UserTable.COL_MYCONTACT  + " = 1",null);
 
         while(cursor.moveToNext()){
-            DemoUser user = new DemoUser();
-            user.setNick(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
+            IMUser user = new IMUser();
+            user.setAppUser(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
+            user.setNick(cursor.getString(cursor.getColumnIndex(UserTable.COL_NICK)));
             user.setHxId(cursor.getString(cursor.getColumnIndex(UserTable.COL_HXID)));
-            user.setAvatarPhoto(cursor.getString(cursor.getColumnIndex(UserTable.COL_AVATAR)));
+            user.setAvartar(cursor.getString(cursor.getColumnIndex(UserTable.COL_AVATAR)));
 
             users.add(user);
         }
@@ -82,23 +84,24 @@ public class DBManager {
         return users;
     }
 
-    public void saveContact(DemoUser user){
+    public void saveContact(IMUser user){
         SQLiteDatabase db = mHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
 
         values.put(UserTable.COL_HXID,user.getHxId());
-        values.put(UserTable.COL_USERNAME,user.getNick());
-        values.put(UserTable.COL_AVATAR,user.getAvatarPhoto());
+        values.put(UserTable.COL_USERNAME,user.getAppUser());
+        values.put(UserTable.COL_AVATAR,user.getAvartar());
+        values.put(UserTable.COL_NICK,user.getNick());
         values.put(UserTable.COL_MYCONTACT,1);
 
         db.replace(UserTable.TABLE_NAME, null, values);
     }
 
-    public void deleteContact(DemoUser user){
+    public void deleteContact(IMUser user){
         SQLiteDatabase db = mHelper.getWritableDatabase();
 
-        db.delete(UserTable.TABLE_NAME, UserTable.COL_HXID + " = ? ", new String[]{user.getHxId()});
+        db.delete(UserTable.TABLE_NAME, UserTable.COL_USERNAME + " = ? ", new String[]{user.getAppUser()});
     }
 
     public List<InvitationInfo> getInvitations(){
@@ -118,10 +121,9 @@ public class DBManager {
             String name = cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_USERNAME));
 
             if(!isGroupInvite){
-                DemoUser user = new DemoUser();
+                IMUser user = new IMUser();
                 user.setHxId(cursor.getString(cursor.getColumnIndex(InvitationMessageTable.COL_HXID)));
                 user.setNick(name);
-
 
                 info.setUser(user);
             }else{
@@ -312,6 +314,7 @@ class UserTable{
     static final String COL_USERNAME = "_user_name";
     static final String COL_HXID = "_hx_id";
     static final String COL_AVATAR = "_user_avatar";
+    static final String COL_NICK = "_nick";
 
     /**
      * indicate if this is my friend or the user used for user info caching
@@ -323,6 +326,7 @@ class UserTable{
                                             + COL_USERNAME + " TEXT, "
                                             + COL_HXID + " TEXT PRIMARY KEY, "
                                             + COL_MYCONTACT + " INTEGER, "
+                                            + COL_NICK + " TEXT, "
                                             + COL_AVATAR + " TEXT);";
 
 }

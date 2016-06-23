@@ -249,14 +249,14 @@ class EventListener {
         public void onContactAdded(String s) {
             Log.d(TAG, "onContactAdded : " + s);
 
-            Model.getInstance().addUser(new DemoUser(s));
+            Model.getInstance().addUser(new IMUser(s));
         }
 
         @Override
         public void onContactDeleted(final String s) {
             Log.d(TAG,"onContactDeleted : " + s);
 
-            final DemoUser user = Model.getInstance().getContacts().get(s);
+            final IMUser user = Model.getInstance().getUserByHx(s);
 
             mH.post(new Runnable() {
                 @Override
@@ -265,7 +265,7 @@ class EventListener {
                 }
             });
 
-            Model.getInstance().deleteContact(s);
+            Model.getInstance().deleteContact(user.getAppUser());
         }
 
         @Override
@@ -274,7 +274,7 @@ class EventListener {
 
             dbManager.updateInvitateNoify(true);
 
-            DemoUser user = new DemoUser(hxId);
+            IMUser user = new IMUser(hxId);
 
             // 从app服务器获取昵称
             // 我在这里就设置为个临时的
@@ -295,7 +295,7 @@ class EventListener {
             inviteInfo.setReason("你的邀请已经被接受");
             inviteInfo.setStatus(InvitationInfo.InvitationStatus.INVITE_ACCEPT_BY_PEER);
 
-            DemoUser user = new DemoUser(s);
+            IMUser user = new IMUser(s);
             user.setNick(s);
 
             inviteInfo.setUser(user);
@@ -310,7 +310,7 @@ class EventListener {
     };
 
     //从app服务器上去取用户信息
-    private void fetchUserFromAppServer(DemoUser user) {
+    private void fetchUserFromAppServer(IMUser user) {
 
     }
 }
