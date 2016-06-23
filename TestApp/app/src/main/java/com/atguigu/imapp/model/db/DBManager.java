@@ -28,6 +28,10 @@ public class DBManager {
         init(context,dbName);
     }
 
+    public void close(){
+        mHelper.close();
+    }
+
     private void init(Context context, String dbName){
         mHelper = new DBHelper(context,dbName);
     }

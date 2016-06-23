@@ -37,7 +37,7 @@ public class Model {
     private Context mAppContext;
     private static Model me = new Model();
     private Map<String,IMUser> mContacts = new HashMap<>();
-    private String mCurrentUser;
+    private IMUser currentAccount;
     private DBManager mDBManager;
     private UserAccountDB userAccountDB;
     private PreferenceUtils mPreference;
@@ -83,6 +83,10 @@ public class Model {
 
         initListener();
         initProvider();
+
+        if(EMClient.getInstance().isLoggedInBefore()){
+            preLogin(getAccountByHxId(EMClient.getInstance().getCurrentUser()));
+        }
 
         return isInited;
     }
@@ -254,16 +258,31 @@ public class Model {
         user.setNick(user.getHxId() + "_凤凰");
     }
 
-    public void onLoggedIn(String userName){
-        if(mCurrentUser == userName){
+    public void preLogin(IMUser account){
+        if(account == null){
             return;
         }
 
-        Log.d(TAG,"logined user name : " + userName);
+        Log.d(TAG,"logined user name : " + account.getAppUser());
 
-        mCurrentUser = userName;
-        mDBManager = new DBManager(mAppContext,mCurrentUser);
+        if(currentAccount != null){
+            if(currentAccount.getAppUser() == account.getAppUser()){
+                return;
+            }
+
+            mDBManager.close();
+
+        }
+
+        currentAccount = new IMUser(account);
+
+        mDBManager = new DBManager(mAppContext,currentAccount.getHxId());
+
         eventListener.setDbManager(mDBManager);
+    }
+
+    public void onLoginSuccess(IMUser user){
+
     }
 
     public List<InvitationInfo> getInvitationInfo(){
@@ -378,7 +397,18 @@ public class Model {
         return userAccountDB.getAccount(appUser);
     }
 
+    public IMUser getAccountFromServer(String appUser) throws Exception{
+        return new IMUser(appUser);
+    }
+
     public IMUser getAccountByHxId(String hxId){
         return userAccountDB.getAccountByHxId(hxId);
+    }
+
+    public IMUser createAppAccountFromAppServer(String appUser) throws Exception{
+
+        //试图去创建一个APP 用户
+        //如果成功就返回IMUser，如果不成功就抛异常
+        return new IMUser(appUser);
     }
 }

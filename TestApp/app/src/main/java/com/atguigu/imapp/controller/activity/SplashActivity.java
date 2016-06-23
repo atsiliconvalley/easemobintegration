@@ -8,6 +8,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
@@ -39,7 +40,9 @@ public class SplashActivity extends Activity {
             new Thread(){
                 @Override
                 public void run(){
-                    Model.getInstance().onLoggedIn(EMClient.getInstance().getCurrentUser());
+                    IMUser account = Model.getInstance().getAccountByHxId(EMClient.getInstance().getCurrentUser());
+
+                    Model.getInstance().onLoginSuccess(account);
 
                     // 保证加载本地群，加载所有的群到内存中
                     EMClient.getInstance().groupManager().loadAllGroups();

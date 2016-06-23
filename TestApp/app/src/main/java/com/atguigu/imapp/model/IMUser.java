@@ -15,6 +15,13 @@ public class IMUser {
         nick = appUser;
     }
 
+    public IMUser(IMUser user){
+        appUser = user.getAppUser();
+        hxId = user.getHxId();
+        nick = user.getNick();
+        avartar = user.getAvartar();
+    }
+
     public IMUser() {
     }
 

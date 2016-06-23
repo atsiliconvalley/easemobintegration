@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.model.IMUser;
 import com.atguigu.imapp.model.Model;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
@@ -31,6 +32,7 @@ public class LoginActivity extends Activity{
 
     private Button mRegisterBtn;
     private Button mLoginBtn;
+    private Activity me;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -47,6 +49,8 @@ public class LoginActivity extends Activity{
 
         mRegisterBtn = (Button) findViewById(R.id.btn_register);
         mLoginBtn = (Button) findViewById(R.id.btn_login);
+
+        me = this;
 
         mRegisterBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,29 +73,42 @@ public class LoginActivity extends Activity{
             return;
         }
 
+        final ProgressDialog pd = new ProgressDialog(this);
+
+        pd.show();
+
         new Thread(){
             @Override
             public void run(){
 
+                String appUser = mEtName.getText().toString();
+
+                IMUser account = Model.getInstance().getAccount(appUser);
+
+                if(account == null){
+                    try {
+                        account = Model.getInstance().createAppAccountFromAppServer(appUser);
+                    } catch (Exception e) {
+
+                        // 创建APP账号失败
+                        showMessage(pd,e.toString());
+                        return;
+                    }
+                }
+
+                String pwd = mEtPwd.getText().toString();
+
                 try {
-                    EMClient.getInstance().createAccount(mEtName.getText().toString(),mEtPwd.getText().toString());
+                    EMClient.getInstance().createAccount(account.getHxId(),pwd);
+
+                    Model.getInstance().addAccount(account);
+
+                    showMessage(pd, "注册成功！");
                 } catch (HyphenateException e) {
                     final String msg = e.toString();
 
-                    LoginActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(LoginActivity.this, "注册失败！" +  msg, Toast.LENGTH_LONG).show();
-                        }
-                    });
+                    showMessage(pd,"注册失败！" +  msg);
                 }
-
-                LoginActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(LoginActivity.this,"注册成功！",Toast.LENGTH_LONG).show();
-                    }
-                });
             }
         }.start();
     }
@@ -105,43 +122,49 @@ public class LoginActivity extends Activity{
         final ProgressDialog pd = new ProgressDialog(this);
         pd.show();
 
-        EMClient.getInstance().login(mEtName.getText().toString(), mEtPwd.getText().toString(), new EMCallBack() {
+        final String pwd = mEtPwd.getText().toString();
+        final String appUser = mEtName.getText().toString();
+
+        IMUser account = Model.getInstance().getAccount(appUser);
+
+        if(account == null){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    IMUser account = null;
+                    try {
+                        account = Model.getInstance().getAccountFromServer(appUser);
+                    } catch (Exception e) {
+                        showMessage(pd,e.toString());
+
+                        return;
+                    }
+
+                    loginHX(account,pwd,pd);
+                }
+            }).start();
+        }
+        
+
+    }
+
+    private void loginHX(final IMUser user, String pwd, final ProgressDialog pd){
+        Model.getInstance().preLogin(user);
+
+        EMClient.getInstance().login(user.getHxId(), pwd, new EMCallBack() {
             @Override
             public void onSuccess() {
-                // 通知model login 成功
-                Model.getInstance().onLoggedIn(EMClient.getInstance().getCurrentUser());
+                // 加用户账号到本地
+                Model.getInstance().addAccount(user);
+
+                // 通知model登录成功
+                Model.getInstance().onLoginSuccess(user);
 
                 // 取本地会话
                 EMClient.getInstance().chatManager().loadAllConversations();
 
                 // 取本地群组
                 EMClient.getInstance().groupManager().loadAllGroups();
-
-                //  同步服务器联系人
-                List<String> hxUsers = null;
-                try {
-                    hxUsers = EMClient.getInstance().contactManager().getAllContactsFromServer();
-                } catch (HyphenateException e) {
-                    e.printStackTrace();
-                }
-
-                // 和本地的users做同步，我们会建立一个表，又来专门存好友信息，包括环信ID
-
-                if (hxUsers != null) {
-                    synncWithLocal(hxUsers);
-                }
-
-                // 同步服务器群组
-                List<EMGroup> groups = null;
-
-                try {
-                    groups = EMClient.getInstance().groupManager().getJoinedGroupsFromServer();
-                } catch (HyphenateException e) {
-                    e.printStackTrace();
-                }
-
-                // 和本地的群信息表做同步
-                syncGroupWithLocal(groups);
 
                 LoginActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -156,14 +179,7 @@ public class LoginActivity extends Activity{
 
             @Override
             public void onError(int errorCode, final String error) {
-                LoginActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        pd.cancel();
-
-                        Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
-                    }
-                });
+                showMessage(pd,error);
             }
 
             @Override
@@ -173,26 +189,18 @@ public class LoginActivity extends Activity{
         });
     }
 
-
-
-    /**
-     * 和本地的联系人表做同步
-     * @param hxUsers
-     */
-    private void synncWithLocal(List<String> hxUsers) {
-
-    }
-
-    /**
-     * 和本地的群组表做同步
-     * @param groups
-     */
-    private void syncGroupWithLocal(List<EMGroup> groups) {
-
-    }
-
     private boolean isValidNameOrPwd(){
         return (!TextUtils.isEmpty(mEtName.getText().toString()) && !TextUtils.isEmpty(mEtPwd.getText().toString()));
+    }
+
+    private void showMessage(final ProgressDialog pd, final String message){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(me,message,Toast.LENGTH_LONG).show();
+                pd.cancel();
+            }
+        });
     }
 }
 
