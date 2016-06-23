@@ -3,6 +3,7 @@ package com.atguigu.imapp.view.adapter;
 import android.content.Context;
 import android.media.Image;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.model.IMUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +22,14 @@ import java.util.zip.Inflater;
  * Created by youni on 16/6/22.
  */
 public class GroupMembersAdapter extends BaseAdapter{
+    private static final String TAG = "GroupMembersAdapter";
     private boolean deleteModel = false;
     private Context context;
     private OnGroupMembersListener groupMembersListener;
     private boolean canAddMember;
     private Handler mH = new Handler();
 
-    private List<String> members = new ArrayList<>();
+    private List<IMUser> members = new ArrayList<>();
 
     public GroupMembersAdapter(Context context, OnGroupMembersListener listener, boolean canAddMember){
         this.canAddMember = canAddMember;
@@ -34,10 +37,13 @@ public class GroupMembersAdapter extends BaseAdapter{
         this.context = context;
     }
 
-    public void refresh(List<String> aMembers){
-        members.clear();
-        members.addAll(aMembers);
+    public void refresh(List<IMUser> aMembers){
+        if(aMembers != null){
+            members.clear();
+            members.addAll(aMembers);
+        }
 
+        Log.d(TAG,"members : " + members);
         mH.post(new Runnable() {
             @Override
             public void run() {
@@ -60,7 +66,7 @@ public class GroupMembersAdapter extends BaseAdapter{
     }
 
     @Override
-    public String getItem(int position) {
+    public IMUser getItem(int position) {
         return members.get(position);
     }
 
@@ -112,7 +118,7 @@ public class GroupMembersAdapter extends BaseAdapter{
                 @Override
                 public void onClick(View v) {
                     if(deleteModel){
-                        groupMembersListener.onDeleteMember(getItem(position));
+                        groupMembersListener.onDeleteMember(getItem(position).getHxId());
                     }
                 }
             });
@@ -143,10 +149,20 @@ public class GroupMembersAdapter extends BaseAdapter{
                 viewHolder.deleteView.setVisibility(View.GONE);
             }
         }else{
-            String member = getItem(position);
+            convertView.setVisibility(View.VISIBLE);
 
-            viewHolder.memberName.setText(member);
+            IMUser member = getItem(position);
+
+            Log.d(TAG,"IMUser member at postion : " + position + " : " + member);
+            viewHolder.memberName.setText(member.getNick());
             viewHolder.avartar.setImageResource(R.drawable.em_default_avatar);
+
+            if(member.getAvartar() != null){
+                //可以用第三方图片加载库，加载头像,例如 Glide
+                //此处没有实现
+            }else{
+                viewHolder.avartar.setImageResource(R.drawable.em_default_avatar);
+            }
 
             if(deleteModel){
                 viewHolder.deleteView.setVisibility(View.VISIBLE);

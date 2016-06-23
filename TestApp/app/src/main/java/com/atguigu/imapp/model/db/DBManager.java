@@ -25,7 +25,7 @@ public class DBManager {
     private DBHelper mHelper;
 
     public DBManager(Context context, String dbName){
-        init(context,dbName);
+        init(context, dbName);
     }
 
     public void close(){
@@ -47,21 +47,25 @@ public class DBManager {
         db.beginTransaction();
 
         for(IMUser user:contacts){
-            ContentValues values = new ContentValues();
-
-            values.put(UserTable.COL_USERNAME,user.getAppUser());
-            values.put(UserTable.COL_NICK,user.getNick());
-            values.put(UserTable.COL_HXID,user.getHxId());
-            values.put(UserTable.COL_MYCONTACT,1);
-            values.put(UserTable.COL_AVATAR,user.getAvartar());
-
-            db.replace(UserTable.TABLE_NAME,null,values);
+            saveContact(user,db,true);
         }
 
         db.setTransactionSuccessful();
         db.endTransaction();
 
         return true;
+    }
+
+    public void saveNonFriends(Collection<IMUser> contacts){
+        SQLiteDatabase db = mHelper.getWritableDatabase();
+        db.beginTransaction();
+
+        for(IMUser user:contacts){
+            saveContact(user,db,false);
+        }
+
+        db.setTransactionSuccessful();
+        db.endTransaction();
     }
 
     public List<IMUser> getContacts(){
@@ -71,15 +75,10 @@ public class DBManager {
 
         SQLiteDatabase db = mHelper.getReadableDatabase();
 
-        Cursor cursor = db.rawQuery("SELECT * from " + UserTable.TABLE_NAME + " where " + UserTable.COL_MYCONTACT  + " = 1",null);
+        Cursor cursor = db.rawQuery("SELECT * from " + UserTable.TABLE_NAME + " where " + UserTable.COL_MYCONTACT + " = 1", null);
 
         while(cursor.moveToNext()){
-            IMUser user = new IMUser();
-            user.setAppUser(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
-            user.setNick(cursor.getString(cursor.getColumnIndex(UserTable.COL_NICK)));
-            user.setHxId(cursor.getString(cursor.getColumnIndex(UserTable.COL_HXID)));
-            user.setAvartar(cursor.getString(cursor.getColumnIndex(UserTable.COL_AVATAR)));
-
+            IMUser user = getContact(cursor);
             users.add(user);
         }
 
@@ -88,16 +87,52 @@ public class DBManager {
         return users;
     }
 
+    public List<IMUser> getContactsByHx(List<String> hxIds){
+        if(hxIds == null || hxIds.size() <= 0){
+            return null;
+        }
+
+        List<IMUser> appUsers = new ArrayList<>();
+
+        SQLiteDatabase db = mHelper.getReadableDatabase();
+
+        for(String hxId:hxIds){
+            Cursor cursor = db.rawQuery("select * from " + UserTable.TABLE_NAME + " where " + UserTable.COL_HXID + " =? ",new String[]{hxId});
+
+            if(cursor.moveToNext()){
+                appUsers.add(getContact(cursor));
+            }
+
+            cursor.close();
+        }
+
+        return appUsers;
+    }
+
+    private IMUser getContact(Cursor cursor){
+        IMUser user = new IMUser();
+        user.setAppUser(cursor.getString(cursor.getColumnIndex(UserTable.COL_USERNAME)));
+        user.setNick(cursor.getString(cursor.getColumnIndex(UserTable.COL_NICK)));
+        user.setHxId(cursor.getString(cursor.getColumnIndex(UserTable.COL_HXID)));
+        user.setAvartar(cursor.getString(cursor.getColumnIndex(UserTable.COL_AVATAR)));
+
+        return user;
+    }
+
     public void saveContact(IMUser user){
         SQLiteDatabase db = mHelper.getWritableDatabase();
 
+        saveContact(user,db,true);
+    }
+
+    public void saveContact(IMUser user, SQLiteDatabase db, boolean isMyFriend){
         ContentValues values = new ContentValues();
 
         values.put(UserTable.COL_HXID,user.getHxId());
-        values.put(UserTable.COL_USERNAME,user.getAppUser());
-        values.put(UserTable.COL_AVATAR,user.getAvartar());
-        values.put(UserTable.COL_NICK,user.getNick());
-        values.put(UserTable.COL_MYCONTACT,1);
+        values.put(UserTable.COL_USERNAME, user.getAppUser());
+        values.put(UserTable.COL_AVATAR, user.getAvartar());
+        values.put(UserTable.COL_NICK, user.getNick());
+        values.put(UserTable.COL_MYCONTACT, isMyFriend?1:0);
 
         db.replace(UserTable.TABLE_NAME, null, values);
     }

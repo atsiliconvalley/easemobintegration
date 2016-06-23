@@ -89,6 +89,10 @@ public class MainActivity extends FragmentActivity {
         if(!Model.getInstance().isContactSynced()){
             Model.getInstance().asyncfetchUsers();
         }
+
+        if(!Model.getInstance().isGroupSynced()){
+            Model.getInstance().asyncFetchGroups();
+        }
     }
 
     private void init(){

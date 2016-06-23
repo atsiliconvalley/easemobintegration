@@ -21,9 +21,13 @@ import com.atguigu.imapp.model.db.DBManager;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by youni on 2016/5/19.
@@ -42,7 +46,9 @@ public class Model {
     private UserAccountDB userAccountDB;
     private PreferenceUtils mPreference;
     private boolean mIsContactSynced = false;
+    private boolean isGroupSynced = false;
     private EventListener eventListener;
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     // used to show the toast
     private Handler mH = new Handler();
@@ -78,6 +84,7 @@ public class Model {
 
         mPreference = new PreferenceUtils(mAppContext);
         mIsContactSynced = mPreference.isContactSynced();
+        isGroupSynced = mPreference.isContactSynced();
 
         isInited = true;
 
@@ -97,6 +104,10 @@ public class Model {
             public void onSuccess() {
                 mPreference.setContactSynced(false);
                 mIsContactSynced = false;
+
+                mPreference.setGroupSynced(false);
+                isGroupSynced = false;
+
                 mContacts.clear();
                 callBack.onSuccess();
             }
@@ -157,6 +168,20 @@ public class Model {
                 GlobalEventNotifer.getInstance().notifyContactSyncChanged(true);
             }
         }).start();
+    }
+
+    public void asyncFetchGroups(){
+        globalThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    EMClient.getInstance().groupManager().getJoinedGroupsFromServer();
+                    mPreference.setGroupSynced(true);
+                } catch (HyphenateException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private List<IMUser> syncWithHxUsers(List<String> hxUsers, List<IMUser> appUsers){
@@ -247,6 +272,10 @@ public class Model {
      */
     public boolean isContactSynced(){
         return mIsContactSynced;
+    }
+
+    public boolean isGroupSynced(){
+        return isGroupSynced;
     }
 
     /**
@@ -410,5 +439,29 @@ public class Model {
         //试图去创建一个APP 用户
         //如果成功就返回IMUser，如果不成功就抛异常
         return new IMUser(appUser);
+    }
+
+    public ExecutorService globalThreadPool(){
+        return executorService;
+    }
+
+    public void saveNonFriends(Collection<IMUser> contacts){
+        mDBManager.saveNonFriends(contacts);
+    }
+
+    public List<IMUser> getContactsByHx(List<String> hxIds){
+        return mDBManager.getContactsByHx(hxIds);
+    }
+
+    public List<IMUser> fetchUsersFromServer(List<String> members){
+        List<IMUser> users = new ArrayList<>();
+
+        for(String id:members){
+            users.add(new IMUser(id));
+        }
+
+        saveNonFriends(users);
+
+        return users;
     }
 }

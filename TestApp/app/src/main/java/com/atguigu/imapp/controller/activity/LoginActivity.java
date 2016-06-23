@@ -143,6 +143,8 @@ public class LoginActivity extends Activity{
                     loginHX(account,pwd,pd);
                 }
             }).start();
+        }else{
+            loginHX(account,pwd,pd);
         }
         
 

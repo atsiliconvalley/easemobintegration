@@ -57,4 +57,17 @@ public class IMUser {
         this.avartar = avartar;
     }
 
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+
+        sb.append(" ->appUser:");
+        sb.append(appUser);
+        sb.append(" ->hxid:");
+        sb.append(hxId);
+        sb.append(" ->nick:");
+        sb.append(nick);
+
+        return sb.toString();
+    }
 }

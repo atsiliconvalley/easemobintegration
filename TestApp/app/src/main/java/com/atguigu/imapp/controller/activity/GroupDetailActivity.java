@@ -12,11 +12,17 @@ import android.widget.Toast;
 
 import com.atguigu.imapp.R;
 import com.atguigu.imapp.common.Constant;
+import com.atguigu.imapp.model.IMUser;
+import com.atguigu.imapp.model.Model;
 import com.atguigu.imapp.view.adapter.GroupMembersAdapter;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMGroup;
 import com.hyphenate.easeui.widget.EaseExpandGridView;
 import com.hyphenate.exceptions.HyphenateException;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by youni on 16/6/21.
@@ -28,6 +34,9 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
     private GroupMembersAdapter membersAdapter;
     private Activity me;
     private Handler mH = new Handler();
+    private List<IMUser> appMembers;
+    private ExecutorService singleQueue = Executors.newSingleThreadExecutor();
+    private boolean isTaskRunning = false;
 
     private int REQUEST_PICK_UP_CONTACTS = 0;
     @Override
@@ -104,7 +113,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                     case MotionEvent.ACTION_DOWN:
                         if (membersAdapter.getDeleteModel()) {
                             membersAdapter.setDeleteModel(false);
-                            membersAdapter.refresh(group.getMembers());
+                            refresh(null);
                             return true;
                         }
                         break;
@@ -118,8 +127,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
         boolean canAddMember = (group.getOwner().equals(EMClient.getInstance().getCurrentUser()) || group.isAllowInvites());
         membersAdapter = new GroupMembersAdapter(this,this,canAddMember);
         gridViewMembers.setAdapter(membersAdapter);
-
-        membersAdapter.refresh(group.getMembers());
+        refresh(null);
         asyncUpdateGroup();
     }
 
@@ -170,9 +178,8 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                     public void run() {
                         if(group.getOwner().equals(EMClient.getInstance().getCurrentUser())){
                             try {
-                                EMClient.getInstance().groupManager().addUsersToGroup(group.getGroupId(),members);
-                                EMClient.getInstance().groupManager().getGroupFromServer(group.getGroupId());
-                                membersAdapter.refresh(group.getMembers());
+                                EMClient.getInstance().groupManager().addUsersToGroup(group.getGroupId(), members);
+                                asyncUpdateGroup();
                             } catch (HyphenateException e) {
                                 e.printStackTrace();
 
@@ -182,7 +189,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                             try {
                                 if(group.isAllowInvites()){
                                     EMClient.getInstance().groupManager().inviteUser(group.getGroupId(),members,"invite you to join the group");
-                                    EMClient.getInstance().groupManager().getGroupFromServer(group.getGroupId());
+                                    asyncUpdateGroup();
                                 }else{
                                     showMessage("没有权限");
                                 }
@@ -203,17 +210,50 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
     }
 
     void asyncUpdateGroup(){
-        new Thread(new Runnable() {
+        singleQueue.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     EMClient.getInstance().groupManager().getGroupFromServer(group.getGroupId());
 
-                    membersAdapter.refresh(group.getMembers());
+                    List<String> members = group.getMembers();
+
+                    List<IMUser> appUsers = Model.getInstance().getContactsByHx(members);
+
+
+                    for(IMUser user:appUsers){
+                        if(members.contains(user.getHxId())){
+                            members.remove(user.getHxId());
+                        }
+                    }
+
+                    List<IMUser> serverUsers = null;
+                    if(members.size() > 0){
+                        serverUsers = Model.getInstance().fetchUsersFromServer(members);
+                    }
+
+                    if(serverUsers != null && serverUsers.size() > 0){
+                        appUsers.addAll(serverUsers);
+                    }
+
+
+                    refresh(appUsers);
                 } catch (HyphenateException e) {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
+    }
+
+    void refresh(List<IMUser> members){
+        membersAdapter.refresh(members);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        singleQueue.shutdownNow();
+        isTaskRunning = false;
     }
 }
