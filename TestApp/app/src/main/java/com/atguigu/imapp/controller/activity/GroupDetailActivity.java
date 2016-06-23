@@ -127,8 +127,12 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
         boolean canAddMember = (group.getOwner().equals(EMClient.getInstance().getCurrentUser()) || group.isAllowInvites());
         membersAdapter = new GroupMembersAdapter(this,this,canAddMember);
         gridViewMembers.setAdapter(membersAdapter);
-        refresh(null);
-        asyncUpdateGroup();
+
+        // 1. 先显示本地的群成员
+        asyncLoadLocalGroup();
+
+        // 2. 再从服务器上获取最新的群成员
+        asyncFetchAndUpdateGroup();
     }
 
     private void showMessage(final String message){
@@ -173,13 +177,13 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                 final String[] members = data.getStringArrayExtra("newmembers");
 
 
-                new Thread(new Runnable() {
+                Model.getInstance().globalThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if(group.getOwner().equals(EMClient.getInstance().getCurrentUser())){
                             try {
                                 EMClient.getInstance().groupManager().addUsersToGroup(group.getGroupId(), members);
-                                asyncUpdateGroup();
+                                asyncFetchAndUpdateGroup();
                             } catch (HyphenateException e) {
                                 e.printStackTrace();
 
@@ -189,7 +193,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                             try {
                                 if(group.isAllowInvites()){
                                     EMClient.getInstance().groupManager().inviteUser(group.getGroupId(),members,"invite you to join the group");
-                                    asyncUpdateGroup();
+                                    asyncFetchAndUpdateGroup();
                                 }else{
                                     showMessage("没有权限");
                                 }
@@ -200,7 +204,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                             }
                         }
                     }
-                }).start();
+                });
 
                 return;
             }
@@ -209,7 +213,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    void asyncUpdateGroup(){
+    void asyncFetchAndUpdateGroup(){
         singleQueue.execute(new Runnable() {
             @Override
             public void run() {
@@ -221,18 +225,18 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                     List<IMUser> appUsers = Model.getInstance().getContactsByHx(members);
 
 
-                    for(IMUser user:appUsers){
-                        if(members.contains(user.getHxId())){
+                    for (IMUser user : appUsers) {
+                        if (members.contains(user.getHxId())) {
                             members.remove(user.getHxId());
                         }
                     }
 
                     List<IMUser> serverUsers = null;
-                    if(members.size() > 0){
+                    if (members.size() > 0) {
                         serverUsers = Model.getInstance().fetchUsersFromServer(members);
                     }
 
-                    if(serverUsers != null && serverUsers.size() > 0){
+                    if (serverUsers != null && serverUsers.size() > 0) {
                         appUsers.addAll(serverUsers);
                     }
 
@@ -241,6 +245,19 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                 } catch (HyphenateException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+    }
+
+    void asyncLoadLocalGroup(){
+        singleQueue.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<String> members = group.getMembers();
+
+                List<IMUser> appUsers = Model.getInstance().getContactsByHx(members);
+
+                refresh(appUsers);
             }
         });
     }

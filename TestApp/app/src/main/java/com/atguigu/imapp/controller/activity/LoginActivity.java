@@ -77,10 +77,9 @@ public class LoginActivity extends Activity{
 
         pd.show();
 
-        new Thread(){
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
-            public void run(){
-
+            public void run() {
                 String appUser = mEtName.getText().toString();
 
                 IMUser account = Model.getInstance().getAccount(appUser);
@@ -110,7 +109,7 @@ public class LoginActivity extends Activity{
                     showMessage(pd,"注册失败！" +  msg);
                 }
             }
-        }.start();
+        });
     }
 
     private void login(){
@@ -128,26 +127,24 @@ public class LoginActivity extends Activity{
         IMUser account = Model.getInstance().getAccount(appUser);
 
         if(account == null){
-            new Thread(new Runnable() {
+            Model.getInstance().globalThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
                     IMUser account = null;
                     try {
                         account = Model.getInstance().getAccountFromServer(appUser);
                     } catch (Exception e) {
-                        showMessage(pd,e.toString());
+                        showMessage(pd, e.toString());
 
                         return;
                     }
 
-                    loginHX(account,pwd,pd);
+                    loginHX(account, pwd, pd);
                 }
-            }).start();
+            });
         }else{
             loginHX(account,pwd,pd);
         }
-        
-
     }
 
     private void loginHX(final IMUser user, String pwd, final ProgressDialog pd){

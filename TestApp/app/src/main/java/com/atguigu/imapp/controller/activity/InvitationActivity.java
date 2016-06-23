@@ -62,23 +62,23 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
     }
 
     void setupInvitations(){
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 mAdapter.refresh(Model.getInstance().getInvitationInfo());
             }
-        }).start();
+        });
     }
 
     @Override
     public void onAccepted(final InvitationInfo invitationInfo) {
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     EMClient.getInstance().contactManager().acceptInvitation(invitationInfo.getUser().getHxId());
 
-                    Model.getInstance().updateInvitation(InvitationInfo.InvitationStatus.INVITE_ACCEPT,invitationInfo.getUser().getHxId());
+                    Model.getInstance().updateInvitation(InvitationInfo.InvitationStatus.INVITE_ACCEPT, invitationInfo.getUser().getHxId());
 
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
 
@@ -87,12 +87,12 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     mH.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(InvitationActivity.this,error,Toast.LENGTH_LONG).show();
+                            Toast.makeText(InvitationActivity.this, error, Toast.LENGTH_LONG).show();
                         }
                     });
                 }
             }
-        }).start();
+        });
     }
 
     @Override
@@ -130,7 +130,7 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
 
     @Override
     public void onGroupApplicationAccept(final InvitationInfo invitationInfo) {
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -145,16 +145,16 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     showMessage("群申请失败 : " + e.toString());
                 }
             }
-        }).start();
+        });
     }
 
     @Override
     public void onGroupInvitationAccept(final InvitationInfo invitationInfo) {
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().groupManager().acceptInvitation(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser());
+                    EMClient.getInstance().groupManager().acceptInvitation(invitationInfo.getGroupInfo().getGroupId(), invitationInfo.getGroupInfo().getInviteTriggerUser());
                     Model.getInstance().acceptGroupInvitation(invitationInfo);
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
 
@@ -165,16 +165,16 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     showMessage("接收邀请失败 : " + e.toString());
                 }
             }
-        }).start();
+        });
     }
 
     @Override
     public void onGroupApplicationReject(final InvitationInfo invitationInfo){
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().groupManager().declineApplication(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser(),"拒绝你的申请");
+                    EMClient.getInstance().groupManager().declineApplication(invitationInfo.getGroupInfo().getGroupId(), invitationInfo.getGroupInfo().getInviteTriggerUser(), "拒绝你的申请");
                     Model.getInstance().rejectGroupApplication(invitationInfo);
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
 
@@ -185,16 +185,16 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     showMessage("拒绝申请失败 ：" + e.toString());
                 }
             }
-        }).start();
+        });
     }
 
     @Override
     public void onGroupInvitationReject(final InvitationInfo invitationInfo) {
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    EMClient.getInstance().groupManager().declineInvitation(invitationInfo.getGroupInfo().getGroupId(),invitationInfo.getGroupInfo().getInviteTriggerUser(),"拒绝加入");
+                    EMClient.getInstance().groupManager().declineInvitation(invitationInfo.getGroupInfo().getGroupId(), invitationInfo.getGroupInfo().getInviteTriggerUser(), "拒绝加入");
                     Model.getInstance().rejectGroupInvitation(invitationInfo);
                     mAdapter.refresh(Model.getInstance().getInvitationInfo());
 
@@ -205,7 +205,7 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     showMessage("拒绝邀请失败 : " + e.toString());
                 }
             }
-        }).start();
+        });
     }
 
     private BroadcastReceiver invitationChangedReceiver = new BroadcastReceiver() {
