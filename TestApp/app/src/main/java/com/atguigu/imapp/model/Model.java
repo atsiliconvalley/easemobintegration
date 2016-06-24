@@ -451,7 +451,7 @@ public class Model {
         return syncedUsers;
     }
 
-    private IMUser getUserByHx(String hxId){
+    IMUser getUserByHx(String hxId){
         for(IMUser user:mContacts.values()){
             if(user.getHxId().equals(hxId)){
                 return user;
