@@ -3,6 +3,7 @@ package com.atguigu.imapp.model;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,10 +15,12 @@ import com.hyphenate.EMContactListener;
 import com.hyphenate.EMError;
 import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
+import com.hyphenate.chat.EMGroup;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.easeui.controller.EaseUI;
 import com.hyphenate.easeui.domain.EaseUser;
+import com.hyphenate.exceptions.HyphenateException;
 
 import java.util.UUID;
 
@@ -73,8 +76,24 @@ class EventListener {
         @Override
         public void onInvitationReceived(String s, String s1, String s2, String s3) {
             final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            EMGroup group = null;
+            if(TextUtils.isEmpty(s1)){
+                try {
+                    group = EMClient.getInstance().groupManager().getGroupFromServer(s);
+                } catch (HyphenateException e) {
+                    e.printStackTrace();
+                }
+            }
+
             groupInfo.setGroupId(s);
-            groupInfo.setGroupName(s1);
+            if(!TextUtils.isEmpty(s1)){
+                groupInfo.setGroupName(s1);
+            }else{
+                if(group != null){
+                    groupInfo.setGroupName(group.getGroupName());
+                }
+            }
+
             groupInfo.setInviteTriggerUser(s2);
 
             InvitationInfo invitationInfo = new InvitationInfo();
@@ -179,8 +198,13 @@ class EventListener {
         @Override
         public void onInvitationAccpted(String s, String s1, String s2) {
             final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+            EMGroup group = EMClient.getInstance().groupManager().getGroup(s);
+
             groupInfo.setGroupId(s);
             groupInfo.setGroupName(s);
+            if(group != null){
+                groupInfo.setGroupName(group.getGroupName());
+            }
             groupInfo.setInviteTriggerUser(s1);
 
             InvitationInfo invitationInfo = new InvitationInfo();
@@ -201,8 +225,14 @@ class EventListener {
         @Override
         public void onInvitationDeclined(String s, String s1, String s2) {
             final IMInvitationGroupInfo groupInfo = new IMInvitationGroupInfo();
+
+            EMGroup group = EMClient.getInstance().groupManager().getGroup(s);
+
             groupInfo.setGroupId(s);
             groupInfo.setGroupName(s);
+            if(group != null){
+                groupInfo.setGroupName(group.getGroupName());
+            }
             groupInfo.setInviteTriggerUser(s1);
 
             InvitationInfo invitationInfo = new InvitationInfo();
