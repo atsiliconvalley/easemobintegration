@@ -79,11 +79,11 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-        group.check(R.id.conv_list_btn);
+        group.check(R.id.contact_list_btn);
 
         currentId = R.id.conv_list_btn;
 
-        switchFragment(mConversationListFragment);
+        //switchFragment(mConversationListFragment);
 
         Model.getInstance().loadLocalContacts();
         if(!Model.getInstance().isContactSynced()){
@@ -148,7 +148,11 @@ public class MainActivity extends FragmentActivity {
         @Override
         public void onMessageReceived(List<EMMessage> list) {
             EaseUI.getInstance().getNotifier().onNewMesg(list);
-            mConversationListFragment.refresh();
+
+            //如果fragment还没有attach到activity上，不能调用任何frament的api
+            if(mConversationListFragment.getActivity() != null){
+                mConversationListFragment.refresh();
+            }
         }
 
         @Override
