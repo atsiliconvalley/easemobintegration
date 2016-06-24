@@ -97,6 +97,19 @@ public class MainActivity extends FragmentActivity {
 
     private void init(){
         initListener();
+
+        Model.getInstance().registerKickoffTask(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "此账号在另外一个设备登录", Toast.LENGTH_LONG).show();
+                        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                    }
+                });
+            }
+        });
     }
 
     private void switchFragment(Fragment fragment) {

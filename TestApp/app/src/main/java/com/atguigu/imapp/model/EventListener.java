@@ -1,13 +1,17 @@
 package com.atguigu.imapp.model;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.atguigu.imapp.event.GlobalEventNotifer;
 import com.atguigu.imapp.model.db.DBManager;
+import com.hyphenate.EMCallBack;
+import com.hyphenate.EMConnectionListener;
 import com.hyphenate.EMContactListener;
+import com.hyphenate.EMError;
 import com.hyphenate.EMGroupChangeListener;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
@@ -24,12 +28,14 @@ class EventListener {
     private final static String TAG ="EventListener";
     private DBManager dbManager;
     private Context appContext;
+    private Runnable kickoffTask;
     private Handler mH = new Handler();
 
     EventListener(Context context){
         appContext = context;
         GlobalEventNotifer.getInstance().addGroupChangeListener(groupChangeListener);
         GlobalEventNotifer.getInstance().addContactListeners(contactListener);
+        registerConnectionListener();
     }
 
     public void setDbManager(DBManager dbManager){
@@ -311,8 +317,44 @@ class EventListener {
         }
     };
 
+    public void registerKickoffIntent(Runnable kickoff){
+        kickoffTask = kickoff;
+    }
     //从app服务器上去取用户信息
     private void fetchUserFromAppServer(IMUser user) {
 
+    }
+
+    private void registerConnectionListener(){
+        EMClient.getInstance().addConnectionListener(new EMConnectionListener() {
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onDisconnected(int i) {
+                if(i == EMError.USER_LOGIN_ANOTHER_DEVICE){
+                    Model.getInstance().logout(new EMCallBack() {
+                        @Override
+                        public void onSuccess() {
+                            if(kickoffTask != null){
+                                kickoffTask.run();
+                            }
+                        }
+
+                        @Override
+                        public void onError(int i, String s) {
+
+                        }
+
+                        @Override
+                        public void onProgress(int i, String s) {
+
+                        }
+                    });
+                }
+            }
+        });
     }
 }

@@ -48,6 +48,7 @@ public class Model {
     private PreferenceUtils mPreference;
     private boolean mIsContactSynced = false;
     private boolean isGroupSynced = false;
+    private Intent kickoffIntent;
     private EventListener eventListener;
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -479,5 +480,9 @@ public class Model {
 
     public  IMUser fetchUserFromServer(String appUser){
         return new IMUser(appUser);
+    }
+
+    public void registerKickoffTask(Runnable kickoff){
+        eventListener.registerKickoffIntent(kickoff);
     }
 }
