@@ -97,7 +97,7 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
 
     @Override
     public void onRejected(final InvitationInfo invitationInfo) {
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -116,7 +116,7 @@ public class InvitationActivity extends Activity implements MyInvitationAdapter.
                     });
                 }
             }
-        }).start();
+        });
     }
 
     private void showMessage(final String message){

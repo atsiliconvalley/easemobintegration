@@ -171,6 +171,8 @@ public class GlobalEventNotifer {
             for(EMContactListener listener:contactListeners){
                 listener.onContactAdded(s);
             }
+
+            broadCastContactChanged();
         }
 
         @Override
@@ -178,6 +180,8 @@ public class GlobalEventNotifer {
             for (EMContactListener listener:contactListeners){
                 listener.onContactDeleted(s);
             }
+
+            broadCastContactChanged();
         }
 
         @Override

@@ -66,7 +66,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
             exitBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    new Thread(new Runnable() {
+                    Model.getInstance().globalThreadPool().execute(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -79,7 +79,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                                 showMessage("解散群失败 : " + e.toString());
                             }
                         }
-                    }).start();
+                    });
                 }
             });
         }else{
@@ -88,7 +88,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
             exitBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    new Thread(new Runnable() {
+                    Model.getInstance().globalThreadPool().execute(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -101,7 +101,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
                                 showMessage("退群失败 : " + e.toString());
                             }
                         }
-                    }).start();
+                    });
                 }
             });
         }

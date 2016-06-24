@@ -37,9 +37,9 @@ public class SplashActivity extends Activity {
     private void onInit() {
 
         if(EMClient.getInstance().isLoggedInBefore()){
-            new Thread(){
+            Model.getInstance().globalThreadPool().execute(new Runnable() {
                 @Override
-                public void run(){
+                public void run() {
                     IMUser account = Model.getInstance().getAccountByHxId(EMClient.getInstance().getCurrentUser());
 
                     Model.getInstance().onLoginSuccess(account);
@@ -58,7 +58,7 @@ public class SplashActivity extends Activity {
                         }
                     });
                 }
-            }.start();
+            });
         }else{
             startActivity(new Intent(this,LoginActivity.class));
             finish();

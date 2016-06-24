@@ -78,6 +78,7 @@ class EventListener {
             invitationInfo.setGroupInfo(groupInfo);
 
             dbManager.addInvitation(invitationInfo);
+            dbManager.updateInvitateNoify(true);
             mH.post(new Runnable() {
                 @Override
                 public void run() {
@@ -100,6 +101,7 @@ class EventListener {
             invitationInfo.setGroupInfo(groupInfo);
 
             dbManager.addInvitation(invitationInfo);
+            dbManager.updateInvitateNoify(true);
 
             mH.post(new Runnable() {
                 @Override

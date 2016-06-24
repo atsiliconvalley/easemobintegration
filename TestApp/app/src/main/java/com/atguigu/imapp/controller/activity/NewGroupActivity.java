@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.atguigu.imapp.R;
+import com.atguigu.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMGroupManager;
 import com.hyphenate.exceptions.HyphenateException;
@@ -67,7 +68,7 @@ public class NewGroupActivity extends Activity {
         final ProgressDialog progressDialog = new ProgressDialog(me);
         progressDialog.show();
 
-        new Thread(new Runnable() {
+        Model.getInstance().globalThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 EMGroupManager.EMGroupStyle groupStyle = EMGroupManager.EMGroupStyle.EMGroupStylePrivateOnlyOwnerInvite;
@@ -97,7 +98,7 @@ public class NewGroupActivity extends Activity {
                     me.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(me,"群 : " + groupName + " 被创建成功",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(me, "群 : " + groupName + " 被创建成功", Toast.LENGTH_SHORT).show();
                             progressDialog.cancel();
                         }
 
@@ -115,7 +116,7 @@ public class NewGroupActivity extends Activity {
                     });
                 }
             }
-        }).start();
+        });
     }
 
     private void findView() {
