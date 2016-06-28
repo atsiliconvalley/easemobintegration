@@ -2,7 +2,6 @@ package com.atguigu.imapp.model;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.util.Log;
 
 import com.atguigu.imapp.event.GlobalEventNotifer;
@@ -26,7 +25,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,10 +49,6 @@ public class Model {
     private Intent kickoffIntent;
     private EventListener eventListener;
     private ExecutorService executorService = Executors.newCachedThreadPool();
-
-    // used to show the toast
-    private Handler mH = new Handler();
-
 
     static public Model getInstance(){
         return me;

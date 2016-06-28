@@ -79,7 +79,7 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-        group.check(R.id.contact_list_btn);
+        group.check(R.id.conv_list_btn);
 
         currentId = R.id.conv_list_btn;
 
