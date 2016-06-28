@@ -71,39 +71,12 @@ public class MyInvitationAdapter extends BaseAdapter {
             holder.btnReject = (Button) convertView.findViewById(R.id.btn_reject);
 
             convertView.setTag(holder);
+        }else{
+            holder = (MyInvitationAdapter.ViewHolder) convertView.getTag();
+        }
 
-            if(isGroupInvite){
-                if(inviteInfo.getStatus() == InvitationInfo.InvitationStatus.NEW_GROUP_APPLICATION){
-                    holder.btnAccept.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            invitationListener.onGroupApplicationAccept(inviteInfo);
-                        }
-                    });
-
-                    holder.btnReject.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            invitationListener.onGroupApplicationReject(inviteInfo);
-                        }
-                    });
-
-                }else if(inviteInfo.getStatus() == InvitationInfo.InvitationStatus.NEW_GROUP_INVITE){
-                    holder.btnAccept.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            invitationListener.onGroupInvitationAccept(inviteInfo);
-                        }
-                    });
-
-                    holder.btnReject.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            invitationListener.onGroupInvitationReject(inviteInfo);
-                        }
-                    });
-                }
-            }else{
+        if(!isGroupInvite){
+            if(inviteInfo.getStatus() == InvitationInfo.InvitationStatus.NEW_INVITE){
                 holder.btnAccept.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -117,13 +90,7 @@ public class MyInvitationAdapter extends BaseAdapter {
                         invitationListener.onRejected(inviteInfo);
                     }
                 });
-            }
-        }else{
-            holder = (MyInvitationAdapter.ViewHolder) convertView.getTag();
-        }
 
-        if(!isGroupInvite){
-            if(inviteInfo.getStatus() == InvitationInfo.InvitationStatus.NEW_INVITE){
                 if(inviteInfo.getReason() != null){
                     holder.reason.setText(inviteInfo.getReason());
                 }else{
@@ -164,6 +131,20 @@ public class MyInvitationAdapter extends BaseAdapter {
                     break;
 
                 case NEW_GROUP_INVITE:
+                    holder.btnAccept.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            invitationListener.onGroupInvitationAccept(inviteInfo);
+                        }
+                    });
+
+                    holder.btnReject.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            invitationListener.onGroupInvitationReject(inviteInfo);
+                        }
+                    });
+
                     holder.btnReject.setVisibility(View.VISIBLE);
                     holder.btnAccept.setVisibility(View.VISIBLE);
 
@@ -171,6 +152,20 @@ public class MyInvitationAdapter extends BaseAdapter {
                     break;
 
                 case NEW_GROUP_APPLICATION:
+                    holder.btnAccept.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            invitationListener.onGroupApplicationAccept(inviteInfo);
+                        }
+                    });
+
+                    holder.btnReject.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            invitationListener.onGroupApplicationReject(inviteInfo);
+                        }
+                    });
+
                     holder.btnReject.setVisibility(View.VISIBLE);
                     holder.btnAccept.setVisibility(View.VISIBLE);
                     holder.reason.setText("您收到了群申请");
