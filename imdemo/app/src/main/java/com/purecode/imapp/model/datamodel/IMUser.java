@@ -1,7 +1,7 @@
-package com.purecode.imapp.model;
+package com.purecode.imapp.model.datamodel;
 
 /**
- * Created by youni on 16/6/22.
+ * Created by purecode on 16/6/22.
  */
 public class IMUser {
     private String appUser;

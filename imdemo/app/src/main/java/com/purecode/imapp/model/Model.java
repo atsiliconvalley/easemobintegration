@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.purecode.imapp.event.GlobalEventNotifer;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.db.PreferenceUtils;
 import com.purecode.imapp.controller.activity.MainActivity;
 import com.purecode.imapp.model.db.UserAccountDB;
@@ -30,7 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by youni on 2016/5/19.
+ * Created by purecode on 2016/5/19.
  *
  * Model - 代表等着整个APP的数据存取模型，所有的其他的类Controller和View实体类都必须且只能通过Model类获取数据模型
  *
@@ -40,15 +41,17 @@ public class Model {
     private boolean isInited = false;
     private Context mAppContext;
     private static Model me = new Model();
-    private Map<String,IMUser> mContacts = new HashMap<>();
     private IMUser currentAccount;
     private DBManager mDBManager;
     private UserAccountDB userAccountDB;
+    // handlers
+    private InvitationHandler invitationHandler;
+    private UserAccountHandler userAccountHandler;
+    private ContactHandler contactHandler;
+
     private PreferenceUtils mPreference;
-    private boolean mIsContactSynced = false;
     private boolean isGroupSynced = false;
-    private Intent kickoffIntent;
-    private EventListener eventListener;
+    private EventHandler eventHandler;
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     static public Model getInstance(){
@@ -74,13 +77,14 @@ public class Model {
         GlobalEventNotifer.getInstance().init(appContext);
 
         // 2. 创建Model Eevent listener
-        eventListener = new EventListener(appContext);
-
-
         userAccountDB = new UserAccountDB(appContext);
-
         mPreference = new PreferenceUtils(mAppContext);
-        mIsContactSynced = mPreference.isContactSynced();
+
+        eventHandler = new EventHandler(appContext);
+        invitationHandler = new InvitationHandler(appContext);
+        userAccountHandler = new UserAccountHandler(appContext,userAccountDB);
+        contactHandler = new ContactHandler(appContext,mPreference);
+
         isGroupSynced = mPreference.isContactSynced();
 
         isInited = true;
@@ -89,7 +93,7 @@ public class Model {
         initProvider();
 
         if(EMClient.getInstance().isLoggedInBefore()){
-            preLogin(getAccountByHxId(EMClient.getInstance().getCurrentUser()));
+            preLogin(userAccountHandler.getAccountByHxId(EMClient.getInstance().getCurrentUser()));
         }
 
         return isInited;
@@ -99,13 +103,10 @@ public class Model {
         EMClient.getInstance().logout(false, new EMCallBack() {
             @Override
             public void onSuccess() {
-                mPreference.setContactSynced(false);
-                mIsContactSynced = false;
+                contactHandler.reset();
 
                 mPreference.setGroupSynced(false);
                 isGroupSynced = false;
-
-                mContacts.clear();
                 callBack.onSuccess();
             }
 
@@ -117,43 +118,6 @@ public class Model {
             @Override
             public void onProgress(int i, String s) {
                 callBack.onProgress(i, s);
-            }
-        });
-    }
-    /**
-     * 从远程服务器获取联系人信息
-     * 1. 从环信服务器上获取
-     * 2. 同时从app服务器上获取
-     * 3. 等到这两个都返回时做两者的同步
-     */
-    public void asyncfetchUsers() {
-        globalThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                mIsContactSynced = false;
-
-                List<String> hxUsers = null;
-                try {
-                    hxUsers = EMClient.getInstance().contactManager().getAllContactsFromServer();
-                    mIsContactSynced = true;
-                    mPreference.setContactSynced(true);
-                } catch (HyphenateException e) {
-                    GlobalEventNotifer.getInstance().notifyContactSyncChanged(false);
-                    e.printStackTrace();
-
-                    return;
-                }
-
-                // 同步联系人
-                // 以环信的联系人为主，如果环信的联系人里没有app里的联系，就把app里的联系人删除
-                // 如果app里的联系人没有环信的联系人，则加入到app里
-
-                fetchUsersFromAppServerByHXIDS(hxUsers);
-
-                // 最后要更新本地数据库
-                mDBManager.saveContacts(mContacts.values());
-
-                GlobalEventNotifer.getInstance().notifyContactSyncChanged(true);
             }
         });
     }
@@ -179,73 +143,10 @@ public class Model {
         });
     }
 
-    /**
-     * 先加载本地的联系人
-     */
-    public void loadLocalContacts(){
-        Log.d("Model", "load local contacts");
-        List<IMUser> users = mDBManager.getContacts();
 
-        if(users != null){
-            mContacts.clear();
-
-            for(IMUser user:users){
-                mContacts.put(user.getHxId(),user);
-            }
-        }
-    }
-
-    public void addHXUser(String hxId){
-        if(getUserByHx(hxId) != null){
-            return;
-        }
-
-        IMUser user = fetchUserFromServerByHXID(hxId);
-
-        mContacts.put(user.getAppUser(), user);
-
-        // 记住应该还要去自己的APP服务器上去获取联系人信息
-        fetchUserFromAppServer(user);
-
-        // save to db;
-        mDBManager.saveContact(user);
-    }
-
-    public void deleteContactByHXID(String hxId){
-        IMUser user = getUserByHx(hxId);
-
-        if(user == null){
-            return;
-        }
-
-        mContacts.remove(user.getAppUser());
-        mDBManager.deleteContact(user);
-        mDBManager.removeInvitation(user.getHxId());
-    }
-
-    public Map<String,IMUser> getContacts(){
-        return mContacts;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public boolean isContactSynced(){
-        return mIsContactSynced;
-    }
 
     public boolean isGroupSynced(){
         return isGroupSynced;
-    }
-
-    /**
-     * try to fetch the user info from app server
-     * and when fecting is done, update the cache and the db
-     * @param user
-     */
-    private void fetchUserFromAppServer(IMUser user) {
-        user.setNick(user.getHxId() + "_凤凰");
     }
 
     public void preLogin(IMUser account){
@@ -268,124 +169,36 @@ public class Model {
 
         mDBManager = new DBManager(mAppContext,currentAccount.getHxId());
 
-        eventListener.setDbManager(mDBManager);
+        eventHandler.setDbManager(mDBManager);
+        invitationHandler.setDbManager(mDBManager);
+        userAccountHandler.setDbManager(mDBManager);
+        contactHandler.setDbManager(mDBManager);
     }
 
     public void onLoginSuccess(IMUser user){
 
     }
 
-    public List<InvitationInfo> getInvitationInfo(){
-        return mDBManager.getInvitations();
+    public InvitationHandler getInvitationHandler(){
+        return invitationHandler;
     }
 
-    public void removeInvitation(String user) {
-        mDBManager.removeInvitation(user);
+    public UserAccountHandler getUserAccountHandler(){
+        return userAccountHandler;
     }
 
-    public void updateInvitation(InvitationInfo.InvitationStatus status,String hxId){
-        mDBManager.updateInvitationStatus(status, hxId);
-    }
-
-    public void updateInviteNotif(boolean hasNotify){
-        mDBManager.updateInvitateNoify(hasNotify);
-    }
-
-    public boolean hasInviteNotif(){
-        return mDBManager.hasInviteNotif();
-    }
-
-    public void acceptGroupInvitation(InvitationInfo invitationInfo){
-        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_ACCEPT_INVITE);
-
-        mDBManager.addInvitation(invitationInfo);
-    }
-
-    public void acceptGroupApplication(InvitationInfo invitationInfo){
-        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUPO_ACCEPT_APPLICATION);
-
-        mDBManager.addInvitation(invitationInfo);
-    }
-
-    public void rejectGroupInvitation(InvitationInfo invitationInfo){
-        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_REJECT_INVITE);
-
-        mDBManager.addInvitation(invitationInfo);
-    }
-
-    public void rejectGroupApplication(InvitationInfo invitationInfo){
-        invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_REJECT_APPLICATION);
-
-        mDBManager.addInvitation(invitationInfo);
-
-    }
-
-    public void addAccount(IMUser account){
-        userAccountDB.addAccount(account);
-    }
-
-    public IMUser getAccount(String appUser){
-        return userAccountDB.getAccount(appUser);
-    }
-
-    public IMUser getAccountFromServer(String appUser) throws Exception{
-        return new IMUser(appUser);
-    }
-
-    public IMUser getAccountByHxId(String hxId){
-        return userAccountDB.getAccountByHxId(hxId);
-    }
-
-    public IMUser createAppAccountFromAppServer(String appUser) throws Exception{
-
-        //试图去创建一个APP 用户
-        //如果成功就返回IMUser，如果不成功就抛异常
-        return new IMUser(appUser);
+    public ContactHandler getContactHandler(){
+        return contactHandler;
     }
 
     public ExecutorService globalThreadPool(){
         return executorService;
     }
 
-    public List<IMUser> getContactsByHxIds(List<String> hxIds){
-        return mDBManager.getContactsByHx(hxIds);
-    }
 
-    public List<IMUser> fetchUsersFromServerByHXIDs(List<String> members){
-        List<IMUser> users = new ArrayList<>();
-
-        for(String id:members){
-            // 伪代码设置昵称，和头像
-            IMUser user = new IMUser();
-
-            user.setAppUser(id);
-            user.setHxId(id);
-            user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
-            user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
-
-            users.add(user);
-        }
-
-        saveNonFriends(users);
-
-        return users;
-    }
-
-    //获取app user信息
-    public  IMUser fetchUserFromServer(String appUser){
-        // 伪代码设置昵称，和头像
-        IMUser user = new IMUser();
-
-        user.setAppUser(appUser);
-        user.setHxId(appUser);
-        user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
-        user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
-
-        return user;
-    }
 
     public void registerKickoffTask(Runnable kickoff){
-        eventListener.registerKickoffIntent(kickoff);
+        eventHandler.registerKickoffIntent(kickoff);
     }
 
     //==============================================================
@@ -395,7 +208,7 @@ public class Model {
         EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
             @Override
             public EaseUser getUser(String username) {
-                IMUser user = getUserByHx(username);
+                IMUser user = contactHandler.getUserByHx(username);
 
                 if (user != null) {
                     EaseUser easeUser = new EaseUser(username);
@@ -416,7 +229,7 @@ public class Model {
             public String getDisplayedText(EMMessage message) {
                 String hxId = message.getFrom();
 
-                IMUser user = getUserByHx(hxId);
+                IMUser user = contactHandler.getUserByHx(hxId);
 
                 if (user != null) {
                     return user.getNick() + "发来一条消息";
@@ -451,60 +264,5 @@ public class Model {
 
     private void fetchGroupsFromAppServer(List<EMGroup> allGroups) {
         //同步服务器群信息,到本地
-    }
-
-    IMUser getUserByHx(String hxId){
-        for(IMUser user:mContacts.values()){
-            if(user.getHxId().equals(hxId)){
-                return user;
-            }
-        }
-
-        return null;
-    }
-
-    private static String[] NICKS = new String[]{"老虎","熊猫","猴子","猎豹","灰熊","企鹅"};
-    private static String[] AVARTARS = new String[]{"http://hiphotos.baidu.com/zhixin/abpic/item/34bbf8cd7b899e516c616dcc40a7d933c9950d3f.jpg",
-                                                    "http://c.hiphotos.baidu.com/baike/pic/item/b8014a90f603738d2be54617b61bb051f819ec5c.jpg",
-                                                    "http://c.hiphotos.baidu.com/baike/w%3D268%3Bg%3D0/sign=788945d218178a82ce3c78a6ce3814b0/8435e5dde71190ef8c692dc1c81b9d16fdfa601a.jpg",
-                                                    "http://e.hiphotos.baidu.com/baike/pic/item/2f738bd4b31c87015d939086277f9e2f0708ffad.jpg"};
-
-    private void fetchUsersFromAppServerByHXIDS(List<String> hxUsers) {
-        // 实际上是应该从APP服务器上获取联系人的信息
-
-        // 不过由于缺乏我们的demo的服务器，暂时hick下，用下假数据
-        //
-
-        mContacts.clear();
-
-        int index = 0;
-        for(String hxId:hxUsers){
-            IMUser user = new IMUser();
-
-            user.setAppUser(hxId);
-            user.setHxId(hxId);
-            user.setNick(user.getHxId() + "_" + NICKS[index % (NICKS.length-1)]);
-            user.setAvartar(AVARTARS[index%(AVARTARS.length-1)]);
-
-            mContacts.put(user.getAppUser(),user);
-
-            index++;
-        }
-    }
-
-    IMUser fetchUserFromServerByHXID(String hxId){
-
-        // 伪代码设置昵称，和头像
-        IMUser user = new IMUser();
-
-        user.setAppUser(hxId);
-        user.setHxId(hxId);
-        user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
-        user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
-        return user;
-    }
-
-    private void saveNonFriends(Collection<IMUser> contacts){
-        mDBManager.saveNonFriends(contacts);
     }
 }

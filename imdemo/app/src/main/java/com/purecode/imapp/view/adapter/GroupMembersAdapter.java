@@ -11,13 +11,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.purecode.imapp.R;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by youni on 16/6/22.
+ * Created by purecode on 16/6/22.
  */
 public class GroupMembersAdapter extends BaseAdapter{
     private static final String TAG = "GroupMembersAdapter";

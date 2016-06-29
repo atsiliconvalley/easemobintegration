@@ -20,7 +20,7 @@ import java.util.List;
 
 import com.purecode.imapp.R;
 import com.purecode.imapp.common.Constant;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
@@ -76,7 +76,7 @@ public class GroupPickContactsActivity extends Activity {
         final List<EaseUser> alluserList = new ArrayList<EaseUser>();
 
 
-        for (IMUser user : Model.getInstance().getContacts().values()) {
+        for (IMUser user : Model.getInstance().getContactHandler().getContacts().values()) {
             EaseUser easeUser = new EaseUser(user.getHxId());
             easeUser.setAvatar(user.getAvartar());
             easeUser.setNick(user.getNick());

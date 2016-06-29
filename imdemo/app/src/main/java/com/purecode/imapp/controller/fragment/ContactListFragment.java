@@ -20,7 +20,7 @@ import com.purecode.imapp.R;
 import com.purecode.imapp.common.Constant;
 import com.purecode.imapp.event.GlobalEventNotifer;
 import com.purecode.imapp.event.OnSyncListener;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.purecode.imapp.controller.activity.AddFriendActivity;
 import com.purecode.imapp.controller.activity.ChatActivity;
@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by youni on 2016/5/19.
+ * Created by purecode on 2016/5/19.
  */
 public class ContactListFragment extends EaseContactListFragment {
 
@@ -60,7 +60,7 @@ public class ContactListFragment extends EaseContactListFragment {
             @Override
             public void onClick(View v) {
                 notifImageView.setVisibility(View.INVISIBLE);
-                Model.getInstance().updateInviteNotif(false);
+                Model.getInstance().getInvitationHandler().updateInviteNotif(false);
                 getActivity().startActivity(new Intent(getActivity(), InvitationActivity.class));
             }
         });
@@ -73,7 +73,7 @@ public class ContactListFragment extends EaseContactListFragment {
             }
         });
 
-        notifImageView.setVisibility(Model.getInstance().hasInviteNotif() ? View.VISIBLE : View.INVISIBLE);
+        notifImageView.setVisibility(Model.getInstance().getInvitationHandler().hasInviteNotif() ? View.VISIBLE : View.INVISIBLE);
 
         registerForContextMenu(listView);
 
@@ -100,7 +100,7 @@ public class ContactListFragment extends EaseContactListFragment {
 
         GlobalEventNotifer.getInstance().addOnContactSyncListener(mContactSyncListener);
 
-        if(Model.getInstance().isContactSynced()){
+        if(Model.getInstance().getContactHandler().isContactSynced()){
             Log.d("ContactListFragment", "already synced");
             setupContacts();
         }
@@ -113,7 +113,7 @@ public class ContactListFragment extends EaseContactListFragment {
     public void setupContacts(){
         Map<String,EaseUser> easeUsers = new HashMap<>();
 
-        Map<String,IMUser> appUsers = Model.getInstance().getContacts();
+        Map<String,IMUser> appUsers = Model.getInstance().getContactHandler().getContacts();
 
         if(appUsers != null){
             for(IMUser user:appUsers.values()){
@@ -171,7 +171,7 @@ public class ContactListFragment extends EaseContactListFragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Model.getInstance().deleteContactByHXID(hxId);
+                            Model.getInstance().getContactHandler().deleteContactByHXID(hxId);
                             setupContacts();
                             pd.cancel();
                         }

@@ -8,6 +8,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.purecode.imapp.event.GlobalEventNotifer;
+import com.purecode.imapp.model.datamodel.IMInvitationGroupInfo;
+import com.purecode.imapp.model.datamodel.IMUser;
+import com.purecode.imapp.model.datamodel.InvitationInfo;
 import com.purecode.imapp.model.db.DBManager;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.EMConnectionListener;
@@ -23,24 +26,23 @@ import com.hyphenate.exceptions.HyphenateException;
 import java.util.UUID;
 
 /**
- * Created by youni on 16/6/21.
+ * Created by purecode on 16/6/21.
+ *
+ * 事件监听器
+ * 用来监听环信的好友邀请，和群的一些邀请和申请事件
+ *
+ * 如果app不依赖于环信的好友关系，可以去掉联系人监听部分，替换成app自己的好友监听事件
  */
-class EventListener {
-    private final static String TAG ="EventListener";
-    private DBManager dbManager;
-    private Context appContext;
+class EventHandler extends HandlerBase{
+    private final static String TAG ="EventHandler";
     private Runnable kickoffTask;
     private Handler mH = new Handler(Looper.getMainLooper());
 
-    EventListener(Context context){
-        appContext = context;
+    EventHandler(Context context){
+        super(context);
         GlobalEventNotifer.getInstance().addGroupChangeListener(groupChangeListener);
         GlobalEventNotifer.getInstance().addContactListeners(contactListener);
         registerConnectionListener();
-    }
-
-    public void setDbManager(DBManager dbManager){
-        this.dbManager = dbManager;
     }
 
     /**
@@ -100,12 +102,12 @@ class EventListener {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_INVITE);
             invitationInfo.setGroupInfo(groupInfo);
 
-            dbManager.addInvitation(invitationInfo);
-            dbManager.updateInvitateNoify(true);
+            getDbManager().addInvitation(invitationInfo);
+            getDbManager().updateInvitateNoify(true);
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "收到邀请 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "收到邀请 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -123,13 +125,13 @@ class EventListener {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.NEW_GROUP_APPLICATION);
             invitationInfo.setGroupInfo(groupInfo);
 
-            dbManager.addInvitation(invitationInfo);
-            dbManager.updateInvitateNoify(true);
+            getDbManager().addInvitation(invitationInfo);
+            getDbManager().updateInvitateNoify(true);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "收到申请 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "收到申请 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -146,12 +148,12 @@ class EventListener {
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_ACCEPTED);
 
-            dbManager.addInvitation(invitationInfo);
+            getDbManager().addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "申请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "申请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -183,12 +185,12 @@ class EventListener {
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_APPLICATION_DECLINED);
             invitationInfo.setGroupInfo(groupInfo);
 
-            dbManager.addInvitation(invitationInfo);
+            getDbManager().addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "申请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "申请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -210,12 +212,12 @@ class EventListener {
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
 
-            dbManager.addInvitation(invitationInfo);
+            getDbManager().addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "邀请被接收 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "邀请被接收 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -238,12 +240,12 @@ class EventListener {
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_DECLINED);
 
-            dbManager.addInvitation(invitationInfo);
+            getDbManager().addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "邀请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "邀请被拒绝 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -269,12 +271,12 @@ class EventListener {
 
             invitationInfo.setGroupInfo(groupInfo);
             invitationInfo.setStatus(InvitationInfo.InvitationStatus.GROUP_INVITE_ACCEPTED);
-            dbManager.addInvitation(invitationInfo);
+            getDbManager().addInvitation(invitationInfo);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "邀请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getAppContext(), "邀请被接受 : " + groupInfo, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -285,30 +287,30 @@ class EventListener {
         public void onContactAdded(String s) {
             Log.d(TAG, "onContactAdded : " + s);
 
-            Model.getInstance().addHXUser(s);
+            Model.getInstance().getContactHandler().addHXUser(s);
         }
 
         @Override
         public void onContactDeleted(final String s) {
             Log.d(TAG,"onContactDeleted : " + s);
 
-            final IMUser user = Model.getInstance().getUserByHx(s);
+            final IMUser user = Model.getInstance().getContactHandler().getUserByHx(s);
 
             mH.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(appContext, "the user is removed : " + user != null?user.getNick():s, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getAppContext(), "the user is removed : " + user != null?user.getNick():s, Toast.LENGTH_LONG).show();
                 }
             });
 
-            Model.getInstance().deleteContactByHXID(s);
+            Model.getInstance().getContactHandler().deleteContactByHXID(s);
         }
 
         @Override
         public void onContactInvited(String hxId, String reason) {
             Log.d(TAG, "onContactInvited : " + hxId);
 
-            dbManager.updateInvitateNoify(true);
+            getDbManager().updateInvitateNoify(true);
 
             IMUser user = new IMUser(hxId);
 
@@ -320,7 +322,7 @@ class EventListener {
             inviteInfo.setReason("加个好友吧");
             inviteInfo.setStatus(InvitationInfo.InvitationStatus.NEW_INVITE);
 
-            dbManager.addInvitation(inviteInfo);
+            getDbManager().addInvitation(inviteInfo);
         }
 
         @Override
@@ -336,7 +338,7 @@ class EventListener {
 
             inviteInfo.setUser(user);
 
-            dbManager.addInvitation(inviteInfo);
+            getDbManager().addInvitation(inviteInfo);
         }
 
         @Override

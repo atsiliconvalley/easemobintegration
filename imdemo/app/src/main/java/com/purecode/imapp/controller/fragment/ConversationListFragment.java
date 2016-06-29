@@ -8,7 +8,7 @@ import com.hyphenate.easeui.EaseConstant;
 import com.hyphenate.easeui.ui.EaseConversationListFragment;
 
 /**
- * Created by youni on 2016/5/19.
+ * Created by purecode on 2016/5/19.
  */
 public class ConversationListFragment extends EaseConversationListFragment {
 

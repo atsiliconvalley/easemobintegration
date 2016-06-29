@@ -1,7 +1,7 @@
-package com.purecode.imapp.model;
+package com.purecode.imapp.model.datamodel;
 
 /**
- * Created by youni on 2016/5/25.
+ * Created by purecode on 2016/5/25.
  */
 public class InvitationInfo {
     private IMUser user;

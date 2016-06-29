@@ -7,17 +7,17 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.purecode.imapp.model.IMInvitationGroupInfo;
-import com.purecode.imapp.model.IMUser;
-import com.purecode.imapp.model.InvitationInfo;
-import com.purecode.imapp.model.InvitationInfo.InvitationStatus;
+import com.purecode.imapp.model.datamodel.IMInvitationGroupInfo;
+import com.purecode.imapp.model.datamodel.IMUser;
+import com.purecode.imapp.model.datamodel.InvitationInfo;
+import com.purecode.imapp.model.datamodel.InvitationInfo.InvitationStatus;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by youni on 2016/5/19.
+ * Created by purecode on 2016/5/19.
  */
 public class DBManager {
     private static final int DB_VERSION = 1;

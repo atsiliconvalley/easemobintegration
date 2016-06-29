@@ -1,7 +1,7 @@
-package com.purecode.imapp.model;
+package com.purecode.imapp.model.datamodel;
 
 /**
- * Created by youni on 16/6/20.
+ * Created by purecode on 16/6/20.
  */
 public class IMInvitationGroupInfo {
     private String groupName;

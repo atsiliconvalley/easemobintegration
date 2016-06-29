@@ -16,7 +16,7 @@ import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
 
 /**
- * Created by youni on 2016/5/19.
+ * Created by purecode on 2016/5/19.
  */
 public class SettingsFragment extends Fragment{
     @Override

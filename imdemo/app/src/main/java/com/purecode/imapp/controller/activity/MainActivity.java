@@ -82,9 +82,9 @@ public class MainActivity extends FragmentActivity {
 
         //switchFragment(mConversationListFragment);
 
-        Model.getInstance().loadLocalContacts();
-        if(!Model.getInstance().isContactSynced()){
-            Model.getInstance().asyncfetchUsers();
+        Model.getInstance().getContactHandler().loadLocalContacts();
+        if(!Model.getInstance().getContactHandler().isContactSynced()){
+            Model.getInstance().getContactHandler().asyncfetchUsers();
         }
 
         if(!Model.getInstance().isGroupSynced()){

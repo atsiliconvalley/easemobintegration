@@ -5,7 +5,7 @@ import android.app.Application;
 import com.purecode.imapp.model.Model;
 
 /**
- * Created by youni on 2016/5/18.
+ * Created by purecode on 2016/5/18.
  */
 public class IMDemoApp extends Application {
     @Override

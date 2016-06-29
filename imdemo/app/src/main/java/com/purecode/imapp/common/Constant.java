@@ -1,7 +1,7 @@
 package com.purecode.imapp.common;
 
 /**
- * Created by youni on 16/6/21.
+ * Created by purecode on 16/6/21.
  */
 public class Constant {
     public static final String GROUP_ID = "group_id";

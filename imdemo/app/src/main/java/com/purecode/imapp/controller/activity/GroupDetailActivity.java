@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import com.purecode.imapp.R;
 import com.purecode.imapp.common.Constant;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.purecode.imapp.view.adapter.GroupMembersAdapter;
 import com.hyphenate.chat.EMClient;
@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by youni on 16/6/21.
+ * Created by purecode on 16/6/21.
  */
 public class GroupDetailActivity extends Activity implements GroupMembersAdapter.OnGroupMembersListener{
     private Button exitBtn;
@@ -237,7 +237,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
 
                     List<String> members = group.getMembers();
 
-                    List<IMUser> appUsers = Model.getInstance().getContactsByHxIds(members);
+                    List<IMUser> appUsers = Model.getInstance().getContactHandler().getContactsByHxIds(members);
 
 
                     for (IMUser user : appUsers) {
@@ -248,7 +248,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
 
                     List<IMUser> serverUsers = null;
                     if (members.size() > 0) {
-                        serverUsers = Model.getInstance().fetchUsersFromServerByHXIDs(members);
+                        serverUsers = Model.getInstance().getContactHandler().fetchUsersFromServerByHXIDs(members);
                     }
 
                     if (serverUsers != null && serverUsers.size() > 0) {
@@ -270,7 +270,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
             public void run() {
                 List<String> members = group.getMembers();
 
-                List<IMUser> appUsers = Model.getInstance().getContactsByHxIds(members);
+                List<IMUser> appUsers = Model.getInstance().getContactHandler().getContactsByHxIds(members);
 
                 refresh(appUsers);
             }

@@ -17,7 +17,7 @@ import com.hyphenate.chat.EMGroupManager;
 import com.hyphenate.exceptions.HyphenateException;
 
 /**
- * Created by youni on 16/6/20.
+ * Created by purecode on 16/6/20.
  */
 public class NewGroupActivity extends Activity {
 

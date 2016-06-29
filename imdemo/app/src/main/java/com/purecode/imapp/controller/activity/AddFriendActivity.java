@@ -11,13 +11,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.purecode.imapp.R;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.exceptions.HyphenateException;
 
 /**
- * Created by youni on 2016/5/22.
+ * Created by purecode on 2016/5/22.
  */
 public class AddFriendActivity extends Activity{
 
@@ -69,7 +69,7 @@ public class AddFriendActivity extends Activity{
                     @Override
                     public void run() {
                         // 从服务器上获取app 信息 主要是获取hxid
-                        searchedUser = Model.getInstance().fetchUserFromServer(appUser);
+                        searchedUser = Model.getInstance().getContactHandler().fetchUserFromServer(appUser);
 
                         runOnUiThread(new Runnable() {
                             @Override

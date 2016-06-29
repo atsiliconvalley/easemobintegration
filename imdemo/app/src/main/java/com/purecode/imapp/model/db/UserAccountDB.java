@@ -6,10 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 
 /**
- * Created by youni on 16/6/22.
+ * Created by purecode on 16/6/22.
  */
 public class UserAccountDB {
     private static final int DB_VERSION = 1;

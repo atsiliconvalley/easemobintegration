@@ -8,12 +8,12 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 
 import com.purecode.imapp.R;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.hyphenate.chat.EMClient;
 
 /**
- * Created by youni on 2016/5/18.
+ * Created by purecode on 2016/5/18.
  */
 public class SplashActivity extends Activity {
     private Handler handler;
@@ -40,7 +40,7 @@ public class SplashActivity extends Activity {
             Model.getInstance().globalThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    IMUser account = Model.getInstance().getAccountByHxId(EMClient.getInstance().getCurrentUser());
+                    IMUser account = Model.getInstance().getUserAccountHandler().getAccountByHxId(EMClient.getInstance().getCurrentUser());
 
                     Model.getInstance().onLoginSuccess(account);
 

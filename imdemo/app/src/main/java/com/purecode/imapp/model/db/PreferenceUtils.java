@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 /**
- * Created by youni on 2016/5/21.
+ * Created by purecode on 2016/5/21.
  */
 public class PreferenceUtils {
     private static final String PREFERENCE_NAME = "atguigu";

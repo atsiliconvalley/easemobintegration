@@ -14,7 +14,7 @@ import com.hyphenate.chat.EMClient;
 import com.hyphenate.easeui.EaseConstant;
 
 /**
- * Created by youni on 16/6/20.
+ * Created by purecode on 16/6/20.
  */
 public class GroupListActivity extends Activity {
     private ListView lvGroup;

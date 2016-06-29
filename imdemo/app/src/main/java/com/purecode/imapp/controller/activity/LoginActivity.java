@@ -11,7 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.purecode.imapp.R;
-import com.purecode.imapp.model.IMUser;
+import com.purecode.imapp.model.datamodel.IMUser;
 import com.purecode.imapp.model.Model;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
@@ -20,7 +20,7 @@ import com.hyphenate.exceptions.HyphenateException;
 import static android.widget.Toast.makeText;
 
 /**
- * Created by youni on 2016/5/18.
+ * Created by purecode on 2016/5/18.
  */
 public class LoginActivity extends Activity{
 
@@ -79,11 +79,11 @@ public class LoginActivity extends Activity{
             public void run() {
                 String appUser = mEtName.getText().toString();
 
-                IMUser account = Model.getInstance().getAccount(appUser);
+                IMUser account = Model.getInstance().getUserAccountHandler().getAccount(appUser);
 
                 if(account == null){
                     try {
-                        account = Model.getInstance().createAppAccountFromAppServer(appUser);
+                        account = Model.getInstance().getUserAccountHandler().createAppAccountFromAppServer(appUser);
                     } catch (Exception e) {
 
                         // 创建APP账号失败
@@ -97,7 +97,7 @@ public class LoginActivity extends Activity{
                 try {
                     EMClient.getInstance().createAccount(account.getHxId(),pwd);
 
-                    Model.getInstance().addAccount(account);
+                    Model.getInstance().getUserAccountHandler().addAccount(account);
 
                     showMessage(pd, "注册成功！");
                 } catch (HyphenateException e) {
@@ -121,7 +121,7 @@ public class LoginActivity extends Activity{
         final String pwd = mEtPwd.getText().toString();
         final String appUser = mEtName.getText().toString();
 
-        IMUser account = Model.getInstance().getAccount(appUser);
+        IMUser account = Model.getInstance().getUserAccountHandler().getAccount(appUser);
 
         if(account == null){
             Model.getInstance().globalThreadPool().execute(new Runnable() {
@@ -129,7 +129,7 @@ public class LoginActivity extends Activity{
                 public void run() {
                     IMUser account = null;
                     try {
-                        account = Model.getInstance().getAccountFromServer(appUser);
+                        account = Model.getInstance().getUserAccountHandler().getAccountFromServer(appUser);
                     } catch (Exception e) {
                         showMessage(pd, e.toString());
 
@@ -151,7 +151,7 @@ public class LoginActivity extends Activity{
             @Override
             public void onSuccess() {
                 // 加用户账号到本地
-                Model.getInstance().addAccount(user);
+                Model.getInstance().getUserAccountHandler().addAccount(user);
 
                 // 通知model登录成功
                 Model.getInstance().onLoginSuccess(user);
