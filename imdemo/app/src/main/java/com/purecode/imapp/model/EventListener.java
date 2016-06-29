@@ -285,7 +285,7 @@ class EventListener {
         public void onContactAdded(String s) {
             Log.d(TAG, "onContactAdded : " + s);
 
-            Model.getInstance().addUser(new IMUser(s));
+            Model.getInstance().addHXUser(s);
         }
 
         @Override
@@ -301,7 +301,7 @@ class EventListener {
                 }
             });
 
-            Model.getInstance().deleteContact(user.getAppUser());
+            Model.getInstance().deleteContactByHXID(s);
         }
 
         @Override

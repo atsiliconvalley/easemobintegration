@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -143,22 +144,13 @@ public class Model {
                     return;
                 }
 
-                // fetch users from app server
-
-                List<IMUser> appUsers = fetchUsersFromAppServer();
-
                 // 同步联系人
                 // 以环信的联系人为主，如果环信的联系人里没有app里的联系，就把app里的联系人删除
                 // 如果app里的联系人没有环信的联系人，则加入到app里
 
+                fetchUsersFromAppServerByHXIDS(hxUsers);
+
                 // 最后要更新本地数据库
-
-                appUsers = syncWithHxUsers(hxUsers, appUsers);
-
-                for (IMUser user : appUsers) {
-                    mContacts.put(user.getAppUser(), user);
-                }
-
                 mDBManager.saveContacts(mContacts.values());
 
                 GlobalEventNotifer.getInstance().notifyContactSyncChanged(true);
@@ -203,10 +195,12 @@ public class Model {
         }
     }
 
-    public void addUser(IMUser user){
-        if(mContacts.containsKey(user.getAppUser())){
+    public void addHXUser(String hxId){
+        if(getUserByHx(hxId) != null){
             return;
         }
+
+        IMUser user = fetchUserFromServerByHXID(hxId);
 
         mContacts.put(user.getAppUser(), user);
 
@@ -217,14 +211,16 @@ public class Model {
         mDBManager.saveContact(user);
     }
 
-    public void deleteContact(String appUser){
-        if(mContacts.get(appUser) == null){
+    public void deleteContactByHXID(String hxId){
+        IMUser user = getUserByHx(hxId);
+
+        if(user == null){
             return;
         }
 
-        mContacts.remove(appUser);
-        mDBManager.deleteContact(new IMUser(appUser));
-        mDBManager.removeInvitation(appUser);
+        mContacts.remove(user.getAppUser());
+        mDBManager.deleteContact(user);
+        mDBManager.removeInvitation(user.getHxId());
     }
 
     public Map<String,IMUser> getContacts(){
@@ -351,19 +347,23 @@ public class Model {
         return executorService;
     }
 
-    public void saveNonFriends(Collection<IMUser> contacts){
-        mDBManager.saveNonFriends(contacts);
-    }
-
-    public List<IMUser> getContactsByHx(List<String> hxIds){
+    public List<IMUser> getContactsByHxIds(List<String> hxIds){
         return mDBManager.getContactsByHx(hxIds);
     }
 
-    public List<IMUser> fetchUsersFromServer(List<String> members){
+    public List<IMUser> fetchUsersFromServerByHXIDs(List<String> members){
         List<IMUser> users = new ArrayList<>();
 
         for(String id:members){
-            users.add(new IMUser(id));
+            // 伪代码设置昵称，和头像
+            IMUser user = new IMUser();
+
+            user.setAppUser(id);
+            user.setHxId(id);
+            user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
+            user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
+
+            users.add(user);
         }
 
         saveNonFriends(users);
@@ -371,10 +371,46 @@ public class Model {
         return users;
     }
 
+    //获取app user信息
+    public  IMUser fetchUserFromServer(String appUser){
+        // 伪代码设置昵称，和头像
+        IMUser user = new IMUser();
+
+        user.setAppUser(appUser);
+        user.setHxId(appUser);
+        user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
+        user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
+
+        return user;
+    }
+
+    public void registerKickoffTask(Runnable kickoff){
+        eventListener.registerKickoffIntent(kickoff);
+    }
+
     //==============================================================
     // please put private api here
     //==============================================================
     private void initProvider(){
+        EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
+            @Override
+            public EaseUser getUser(String username) {
+                IMUser user = getUserByHx(username);
+
+                if (user != null) {
+                    EaseUser easeUser = new EaseUser(username);
+
+                    easeUser.setNick(user.getNick());
+
+                    easeUser.setAvatar(user.getAvartar());
+
+                    return easeUser;
+                }
+
+                return null;
+            }
+        });
+
         EaseUI.getInstance().getNotifier().setNotificationInfoProvider(new EaseNotifier.EaseNotificationInfoProvider() {
             @Override
             public String getDisplayedText(EMMessage message) {
@@ -411,39 +447,10 @@ public class Model {
     }
 
     private void initListener() {
-        EaseUI.getInstance().setUserProfileProvider(new EaseUI.EaseUserProfileProvider() {
-            @Override
-            public EaseUser getUser(String username) {
-                IMUser user = getUserByHx(username);
-
-                if (user != null) {
-                    EaseUser easeUser = new EaseUser(username);
-
-                    easeUser.setNick(user.getNick());
-
-                    easeUser.setAvatar("http://www.atguigu.com/images/logo.gif");
-                    return easeUser;
-                }
-
-                return null;
-            }
-        });
     }
 
     private void fetchGroupsFromAppServer(List<EMGroup> allGroups) {
         //同步服务器群信息,到本地
-    }
-
-    private List<IMUser> syncWithHxUsers(List<String> hxUsers, List<IMUser> appUsers){
-        List<IMUser> syncedUsers = new ArrayList<>();
-
-        for(String hxId:hxUsers){
-            IMUser appUser = new IMUser(hxId);
-
-            syncedUsers.add(appUser);
-        }
-
-        return syncedUsers;
     }
 
     IMUser getUserByHx(String hxId){
@@ -457,26 +464,47 @@ public class Model {
     }
 
     private static String[] NICKS = new String[]{"老虎","熊猫","猴子","猎豹","灰熊","企鹅"};
+    private static String[] AVARTARS = new String[]{"http://hiphotos.baidu.com/zhixin/abpic/item/34bbf8cd7b899e516c616dcc40a7d933c9950d3f.jpg",
+                                                    "http://c.hiphotos.baidu.com/baike/pic/item/b8014a90f603738d2be54617b61bb051f819ec5c.jpg",
+                                                    "http://c.hiphotos.baidu.com/baike/w%3D268%3Bg%3D0/sign=788945d218178a82ce3c78a6ce3814b0/8435e5dde71190ef8c692dc1c81b9d16fdfa601a.jpg",
+                                                    "http://e.hiphotos.baidu.com/baike/pic/item/2f738bd4b31c87015d939086277f9e2f0708ffad.jpg"};
 
-    private List<IMUser> fetchUsersFromAppServer() {
+    private void fetchUsersFromAppServerByHXIDS(List<String> hxUsers) {
         // 实际上是应该从APP服务器上获取联系人的信息
 
         // 不过由于缺乏我们的demo的服务器，暂时hick下，用下假数据
         //
 
+        mContacts.clear();
+
         int index = 0;
-        for(IMUser user:mContacts.values()){
-            user.setNick(user.getHxId() + "_" + NICKS[index % NICKS.length]);
+        for(String hxId:hxUsers){
+            IMUser user = new IMUser();
+
+            user.setAppUser(hxId);
+            user.setHxId(hxId);
+            user.setNick(user.getHxId() + "_" + NICKS[index % (NICKS.length-1)]);
+            user.setAvartar(AVARTARS[index%(AVARTARS.length-1)]);
+
+            mContacts.put(user.getAppUser(),user);
+
             index++;
         }
-        return null;
     }
 
-    public  IMUser fetchUserFromServer(String appUser){
-        return new IMUser(appUser);
+    IMUser fetchUserFromServerByHXID(String hxId){
+
+        // 伪代码设置昵称，和头像
+        IMUser user = new IMUser();
+
+        user.setAppUser(hxId);
+        user.setHxId(hxId);
+        user.setNick(NICKS[new Random().nextInt(100)%(NICKS.length-1)]);
+        user.setAvartar(AVARTARS[new Random().nextInt(100) % (AVARTARS.length - 1)]);
+        return user;
     }
 
-    public void registerKickoffTask(Runnable kickoff){
-        eventListener.registerKickoffIntent(kickoff);
+    private void saveNonFriends(Collection<IMUser> contacts){
+        mDBManager.saveNonFriends(contacts);
     }
 }

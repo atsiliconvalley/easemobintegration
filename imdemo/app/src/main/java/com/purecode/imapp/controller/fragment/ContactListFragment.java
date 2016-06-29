@@ -171,7 +171,7 @@ public class ContactListFragment extends EaseContactListFragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Model.getInstance().deleteContact(hxId);
+                            Model.getInstance().deleteContactByHXID(hxId);
                             setupContacts();
                             pd.cancel();
                         }

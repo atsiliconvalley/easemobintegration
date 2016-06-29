@@ -237,7 +237,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
 
                     List<String> members = group.getMembers();
 
-                    List<IMUser> appUsers = Model.getInstance().getContactsByHx(members);
+                    List<IMUser> appUsers = Model.getInstance().getContactsByHxIds(members);
 
 
                     for (IMUser user : appUsers) {
@@ -248,7 +248,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
 
                     List<IMUser> serverUsers = null;
                     if (members.size() > 0) {
-                        serverUsers = Model.getInstance().fetchUsersFromServer(members);
+                        serverUsers = Model.getInstance().fetchUsersFromServerByHXIDs(members);
                     }
 
                     if (serverUsers != null && serverUsers.size() > 0) {
@@ -270,7 +270,7 @@ public class GroupDetailActivity extends Activity implements GroupMembersAdapter
             public void run() {
                 List<String> members = group.getMembers();
 
-                List<IMUser> appUsers = Model.getInstance().getContactsByHx(members);
+                List<IMUser> appUsers = Model.getInstance().getContactsByHxIds(members);
 
                 refresh(appUsers);
             }

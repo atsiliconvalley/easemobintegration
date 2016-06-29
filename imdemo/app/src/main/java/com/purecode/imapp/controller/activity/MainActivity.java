@@ -176,7 +176,9 @@ public class MainActivity extends FragmentActivity {
     BroadcastReceiver contactChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            mContactListFragment.setupContacts();
+            if(mContactListFragment.getActivity() != null){
+                mContactListFragment.setupContacts();
+            }
         }
     };
 }
